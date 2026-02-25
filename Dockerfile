@@ -6,17 +6,24 @@ COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
 
-# Accept VITE_ build args so Vite inlines them into the JS bundle
-ARG VITE_HA_BASE_URL
-ARG VITE_HA_TOKEN
-ARG VITE_HA_WEBHOOK_OPEN
-ARG VITE_HA_WEBHOOK_OPEN_AND_LATCH
-ARG VITE_HA_WEBHOOK_UNLATCH
-ARG VITE_GO2RTC_URL
-ARG VITE_GO2RTC_STREAM
-ARG VITE_MOCK
-
-RUN npm run build
+# Read secrets at build time via --mount=type=secret (never stored in image layers).
+# The .env file is assembled from individual secrets and sourced before the build.
+RUN --mount=type=secret,id=VITE_HA_BASE_URL \
+    --mount=type=secret,id=VITE_HA_TOKEN \
+    --mount=type=secret,id=VITE_HA_WEBHOOK_OPEN \
+    --mount=type=secret,id=VITE_HA_WEBHOOK_OPEN_AND_LATCH \
+    --mount=type=secret,id=VITE_HA_WEBHOOK_UNLATCH \
+    --mount=type=secret,id=VITE_GO2RTC_URL \
+    --mount=type=secret,id=VITE_GO2RTC_STREAM \
+    export VITE_HA_BASE_URL=$(cat /run/secrets/VITE_HA_BASE_URL 2>/dev/null) && \
+    export VITE_HA_TOKEN=$(cat /run/secrets/VITE_HA_TOKEN 2>/dev/null) && \
+    export VITE_HA_WEBHOOK_OPEN=$(cat /run/secrets/VITE_HA_WEBHOOK_OPEN 2>/dev/null) && \
+    export VITE_HA_WEBHOOK_OPEN_AND_LATCH=$(cat /run/secrets/VITE_HA_WEBHOOK_OPEN_AND_LATCH 2>/dev/null) && \
+    export VITE_HA_WEBHOOK_UNLATCH=$(cat /run/secrets/VITE_HA_WEBHOOK_UNLATCH 2>/dev/null) && \
+    export VITE_GO2RTC_URL=$(cat /run/secrets/VITE_GO2RTC_URL 2>/dev/null) && \
+    export VITE_GO2RTC_STREAM=$(cat /run/secrets/VITE_GO2RTC_STREAM 2>/dev/null) && \
+    export VITE_MOCK=false && \
+    npm run build
 
 # ── Stage 2: Serve ────────────────────────────────────────────
 FROM nginx:alpine

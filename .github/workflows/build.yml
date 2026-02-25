@@ -56,7 +56,7 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          build-args: |
+          secrets: |
             VITE_HA_BASE_URL=${{ secrets.VITE_HA_BASE_URL }}
             VITE_HA_TOKEN=${{ secrets.VITE_HA_TOKEN }}
             VITE_HA_WEBHOOK_OPEN=${{ secrets.VITE_HA_WEBHOOK_OPEN }}
@@ -64,4 +64,3 @@ jobs:
             VITE_HA_WEBHOOK_UNLATCH=${{ secrets.VITE_HA_WEBHOOK_UNLATCH }}
             VITE_GO2RTC_URL=${{ secrets.VITE_GO2RTC_URL }}
             VITE_GO2RTC_STREAM=${{ secrets.VITE_GO2RTC_STREAM }}
-            VITE_MOCK=false
