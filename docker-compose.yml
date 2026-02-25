@@ -1,16 +1,6 @@
 services:
   gate:
-    build:
-      context: .
-      args:
-        - VITE_HA_BASE_URL=${VITE_HA_BASE_URL}
-        - VITE_HA_TOKEN=${VITE_HA_TOKEN}
-        - VITE_HA_WEBHOOK_OPEN=${VITE_HA_WEBHOOK_OPEN}
-        - VITE_HA_WEBHOOK_OPEN_AND_LATCH=${VITE_HA_WEBHOOK_OPEN_AND_LATCH}
-        - VITE_HA_WEBHOOK_UNLATCH=${VITE_HA_WEBHOOK_UNLATCH}
-        - VITE_GO2RTC_URL=${VITE_GO2RTC_URL}
-        - VITE_GO2RTC_STREAM=${VITE_GO2RTC_STREAM}
-        - VITE_MOCK=${VITE_MOCK}
+    image: ghcr.io/robertlacher/bob-cox-gate:latest
     container_name: gate-keeper
     restart: unless-stopped
     ports:

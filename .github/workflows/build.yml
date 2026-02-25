@@ -1,0 +1,53 @@
+name: Build & Push Docker Image
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha,prefix=
+            type=raw,value=latest
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            VITE_HA_BASE_URL=${{ secrets.VITE_HA_BASE_URL }}
+            VITE_HA_TOKEN=${{ secrets.VITE_HA_TOKEN }}
+            VITE_HA_WEBHOOK_OPEN=${{ secrets.VITE_HA_WEBHOOK_OPEN }}
+            VITE_HA_WEBHOOK_OPEN_AND_LATCH=${{ secrets.VITE_HA_WEBHOOK_OPEN_AND_LATCH }}
+            VITE_HA_WEBHOOK_UNLATCH=${{ secrets.VITE_HA_WEBHOOK_UNLATCH }}
+            VITE_GO2RTC_URL=${{ secrets.VITE_GO2RTC_URL }}
+            VITE_GO2RTC_STREAM=${{ secrets.VITE_GO2RTC_STREAM }}
+            VITE_MOCK=false
