@@ -5,8 +5,8 @@ const go2rtcUrl = import.meta.env.VITE_GO2RTC_URL || ''
 const go2rtcStream = import.meta.env.VITE_GO2RTC_STREAM || ''
 const isMock = !go2rtcUrl || !go2rtcStream
 
-// In dev, use Vite proxy to avoid CORS; in production, hit go2rtc directly
-const go2rtcBase = import.meta.env.DEV ? '/go2rtc' : go2rtcUrl
+// Always proxy through /go2rtc (Vite dev proxy or nginx in production) to avoid CORS
+const go2rtcBase = '/go2rtc'
 
 const videoEl = ref(null)
 const status = ref('idle') // idle | connecting | connected | error

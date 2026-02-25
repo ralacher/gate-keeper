@@ -29,7 +29,7 @@ COPY nginx.conf /etc/nginx/default.conf.template
 
 # Copy custom entrypoint that only substitutes HA_BASE_URL and GO2RTC_URL
 COPY docker-entrypoint.sh /docker-entrypoint.sh
-RUN sed -i 's/\r$//' /docker-entrypoint.sh && chmod +x /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
 
 # Copy built app
 COPY --from=build /app/dist /usr/share/nginx/html
