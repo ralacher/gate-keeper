@@ -39,40 +39,40 @@ describe('ActivityHistory', () => {
     expect(rows).toHaveLength(3)
   })
 
-  it('applies badge-primary class for "Opened gate"', () => {
+  it('applies text-primary class for "Opened gate"', () => {
     const wrapper = factory({
       history: [
         { id: 1, timestamp: '2026-02-25T12:00:00Z', user: 'test', action: 'Opened gate' },
       ],
     })
-    expect(wrapper.find('.badge-primary').exists()).toBe(true)
+    expect(wrapper.find('.text-primary').exists()).toBe(true)
   })
 
-  it('applies badge-warning class for "Opened & latched" actions', () => {
+  it('applies text-warning class for "Opened & latched" actions', () => {
     const wrapper = factory({
       history: [
         { id: 1, timestamp: '2026-02-25T12:00:00Z', user: 'test', action: 'Opened & latched gate (expected unlatch: soon)' },
       ],
     })
-    expect(wrapper.find('.badge-warning').exists()).toBe(true)
+    expect(wrapper.find('.text-warning').exists()).toBe(true)
   })
 
-  it('applies badge-accent class for "Unlatched gate"', () => {
+  it('applies text-accent class for "Unlatched gate"', () => {
     const wrapper = factory({
       history: [
         { id: 1, timestamp: '2026-02-25T12:00:00Z', user: 'test', action: 'Unlatched gate' },
       ],
     })
-    expect(wrapper.find('.badge-accent').exists()).toBe(true)
+    expect(wrapper.find('.text-accent').exists()).toBe(true)
   })
 
-  it('applies badge-info class for "Manual correction" actions', () => {
+  it('applies text-info class for "Manual correction" actions', () => {
     const wrapper = factory({
       history: [
         { id: 1, timestamp: '2026-02-25T12:00:00Z', user: 'test', action: 'Manual correction → Latched Open' },
       ],
     })
-    expect(wrapper.find('.badge-info').exists()).toBe(true)
+    expect(wrapper.find('.text-info').exists()).toBe(true)
   })
 
   it('has table headers Date, Time, User, Action', () => {

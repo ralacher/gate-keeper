@@ -48,12 +48,12 @@ function formatTime(iso) {
             <td class="max-w-[140px] truncate">{{ entry.user }}</td>
             <td>
               <span
-                class="badge badge-sm"
+                class="text-sm font-medium"
                 :class="{
-                  'badge-primary': entry.action === 'Opened gate',
-                  'badge-warning': entry.action?.startsWith('Opened & latched'),
-                  'badge-accent': entry.action === 'Unlatched gate',
-                  'badge-info': entry.action?.startsWith('Manual correction'),
+                  'text-primary': entry.action === 'Opened gate',
+                  'text-warning': entry.action?.startsWith('Opened & latched'),
+                  'text-accent': entry.action === 'Unlatched gate',
+                  'text-info': entry.action?.startsWith('Manual correction'),
                 }"
               >
                 {{ entry.action }}
