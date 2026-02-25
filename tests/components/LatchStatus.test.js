@@ -25,10 +25,25 @@ describe('LatchStatus', () => {
     expect(wrapper.find('.alert-warning').exists()).toBe(true)
   })
 
-  it('emits "toggle-latch" when alert is clicked', async () => {
+  it('emits "toggle-latch" after confirmation', async () => {
     const wrapper = factory()
     await wrapper.find('.alert').trigger('click')
+    // Modal should be open
+    expect(wrapper.find('.modal-open').exists()).toBe(true)
+    // Click "Yes, Change It"
+    await wrapper.find('.btn-warning').trigger('click')
     expect(wrapper.emitted('toggle-latch')).toBeTruthy()
+  })
+
+  it('does not emit "toggle-latch" when cancelled', async () => {
+    const wrapper = factory()
+    await wrapper.find('.alert').trigger('click')
+    expect(wrapper.find('.modal-open').exists()).toBe(true)
+    // Click "Cancel"
+    const cancelBtn = wrapper.findAll('.modal-box .btn').find(b => b.text() === 'Cancel')
+    await cancelBtn.trigger('click')
+    expect(wrapper.emitted('toggle-latch')).toBeFalsy()
+    expect(wrapper.find('.modal-open').exists()).toBe(false)
   })
 
   it('does not show expected unlatch time when not latched', () => {

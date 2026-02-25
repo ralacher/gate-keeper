@@ -1,10 +1,27 @@
 <script setup>
-defineProps({
+import { ref } from 'vue'
+
+const props = defineProps({
   latched: Boolean,
   expectedUnlatch: Object, // { time: ISO, user: string } or null
 })
 
-defineEmits(['toggle-latch'])
+const emit = defineEmits(['toggle-latch'])
+
+const showConfirm = ref(false)
+
+function onAlertClick() {
+  showConfirm.value = true
+}
+
+function confirmToggle() {
+  showConfirm.value = false
+  emit('toggle-latch')
+}
+
+function cancelToggle() {
+  showConfirm.value = false
+}
 
 function formatExpectedTime(iso) {
   if (!iso) return ''
@@ -23,10 +40,10 @@ function formatExpectedTime(iso) {
 
     <!-- Latch status alert -->
     <div
-      class="alert w-full cursor-pointer transition-opacity hover:opacity-80 active:scale-[0.98]"
+      class="alert flex flex-row flex-nowrap items-center gap-2 py-2 w-full cursor-pointer transition-opacity hover:opacity-80 active:scale-[0.98]"
       :class="latched ? 'alert-warning' : 'alert-success'"
       title="Tap to correct latch state"
-      @click="$emit('toggle-latch')"
+      @click="onAlertClick"
     >
       <svg v-if="latched" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" viewBox="0 0 20 20" fill="currentColor">
         <path d="M10 2a5 5 0 00-5 5v2a2 2 0 00-2 2v5a2 2 0 002 2h10a2 2 0 002-2v-5a2 2 0 00-2-2H7V7a3 3 0 015.905-.75 1 1 0 001.937-.5A5.002 5.002 0 0010 2z"/>
@@ -34,13 +51,33 @@ function formatExpectedTime(iso) {
       <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" viewBox="0 0 20 20" fill="currentColor">
         <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/>
       </svg>
-      <div>
-        <span class="font-semibold">Current Status:</span> {{ latched ? 'Latched Open' : 'Unlatched' }}
-      </div>
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 opacity-40" viewBox="0 0 20 20" fill="currentColor">
+      <span class="font-semibold whitespace-nowrap">Current Status:</span>
+      <span class="whitespace-nowrap">{{ latched ? 'Latched Open' : 'Unlatched' }}</span>
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 shrink-0 opacity-40 ml-auto" viewBox="0 0 20 20" fill="currentColor">
         <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
       </svg>
     </div>
+
+    <!-- Confirmation modal -->
+    <dialog class="modal" :class="{ 'modal-open': showConfirm }">
+      <div class="modal-box">
+        <h3 class="text-lg font-bold">Change Latch Status</h3>
+        <p class="py-4">
+          This will change the status from
+          <strong>{{ latched ? 'Latched Open' : 'Unlatched' }}</strong> to
+          <strong>{{ latched ? 'Unlatched' : 'Latched Open' }}</strong>.
+          This is a manual correction only — it does not physically move the gate.
+        </p>
+        <p class="text-sm opacity-60">Are you sure?</p>
+        <div class="modal-action">
+          <button class="btn" @click="cancelToggle">Cancel</button>
+          <button class="btn btn-warning" @click="confirmToggle">Yes, Change It</button>
+        </div>
+      </div>
+      <form method="dialog" class="modal-backdrop" @click="cancelToggle">
+        <button>close</button>
+      </form>
+    </dialog>
 
     <!-- Expected unlatch time (informational) -->
     <div
