@@ -6,6 +6,10 @@ services:
     ports:
       - "3080:80"
     environment:
-      # These are used by nginx reverse proxy at runtime (envsubst)
-      - HA_BASE_URL=http://192.168.0.201:8123
-      - GO2RTC_URL=http://192.168.0.201:1984
+      - VITE_HA_BASE_URL=${VITE_HA_BASE_URL}
+      - VITE_HA_TOKEN=${VITE_HA_TOKEN}
+      - VITE_HA_WEBHOOK_OPEN=${VITE_HA_WEBHOOK_OPEN}
+      - VITE_HA_WEBHOOK_OPEN_AND_LATCH=${VITE_HA_WEBHOOK_OPEN_AND_LATCH}
+      - VITE_HA_WEBHOOK_UNLATCH=${VITE_HA_WEBHOOK_UNLATCH}
+      - VITE_GO2RTC_URL=${VITE_GO2RTC_URL}
+      - VITE_GO2RTC_STREAM=${VITE_GO2RTC_STREAM}
