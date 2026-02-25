@@ -24,13 +24,16 @@ FROM nginx:alpine
 # Remove default site
 RUN rm /etc/nginx/conf.d/default.conf
 
-# Copy our nginx config (uses envsubst for runtime env vars)
-COPY nginx.conf /etc/nginx/templates/default.conf.template
+# Copy our nginx config template (NOT in /etc/nginx/templates/ — we handle envsubst ourselves)
+COPY nginx.conf /etc/nginx/default.conf.template
+
+# Copy custom entrypoint that only substitutes HA_BASE_URL and GO2RTC_URL
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
 
 # Copy built app
 COPY --from=build /app/dist /usr/share/nginx/html
 
 EXPOSE 80
 
-# nginx:alpine image auto-runs envsubst on /etc/nginx/templates/*.template
-# and outputs to /etc/nginx/conf.d/ before starting nginx
+ENTRYPOINT ["/docker-entrypoint.sh"]
