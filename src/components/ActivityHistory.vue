@@ -25,28 +25,32 @@ function formatTime(iso) {
 
 <template>
   <div>
-    <h2 class="mb-3 text-lg font-semibold tracking-wide opacity-80">Activity History</h2>
+    <h2 class="section-label mb-4">Activity History</h2>
 
-    <div v-if="history.length === 0" class="rounded-box bg-base-200 p-6 text-center opacity-60">
-      No activity yet — use the controls above to get started.
+    <div v-if="history.length === 0" class="glass-card flex flex-col items-center justify-center px-6 py-10 text-center">
+      <svg xmlns="http://www.w3.org/2000/svg" class="mb-3 h-8 w-8 text-base-content/20" viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.828a1 1 0 101.415-1.414L11 9.586V6z" clip-rule="evenodd"/>
+      </svg>
+      <p class="text-sm text-base-content/40">No activity yet</p>
+      <p class="text-xs text-base-content/25 mt-1">Use the controls above to get started</p>
     </div>
 
-    <div v-else class="overflow-x-auto rounded-box">
-      <table class="table table-zebra table-sm w-full">
+    <div v-else class="glass-card overflow-hidden">
+      <table class="w-full text-sm">
         <thead>
-          <tr>
-            <th>Date</th>
-            <th>Time</th>
-            <th>User</th>
-            <th>Action</th>
+          <tr class="border-b border-white/[0.06] text-left">
+            <th class="px-4 py-3 text-xs font-medium uppercase tracking-wider text-base-content/30">Date</th>
+            <th class="px-4 py-3 text-xs font-medium uppercase tracking-wider text-base-content/30">Time</th>
+            <th class="px-4 py-3 text-xs font-medium uppercase tracking-wider text-base-content/30">User</th>
+            <th class="px-4 py-3 text-xs font-medium uppercase tracking-wider text-base-content/30">Action</th>
           </tr>
         </thead>
-        <tbody>
-          <tr v-for="entry in history" :key="entry.id">
-            <td class="whitespace-nowrap">{{ formatDate(entry.timestamp) }}</td>
-            <td class="whitespace-nowrap">{{ formatTime(entry.timestamp) }}</td>
-            <td class="max-w-[140px] truncate">{{ entry.user }}</td>
-            <td>
+        <tbody class="divide-y divide-white/[0.04]">
+          <tr v-for="entry in history" :key="entry.id" class="transition-colors hover:bg-white/[0.02]">
+            <td class="whitespace-nowrap px-4 py-3 text-base-content/50">{{ formatDate(entry.timestamp) }}</td>
+            <td class="whitespace-nowrap px-4 py-3 text-base-content/50">{{ formatTime(entry.timestamp) }}</td>
+            <td class="max-w-[140px] truncate px-4 py-3 text-base-content/70">{{ entry.user }}</td>
+            <td class="px-4 py-3">
               <span
                 class="text-sm font-medium"
                 :class="{

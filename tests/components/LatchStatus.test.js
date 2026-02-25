@@ -13,21 +13,23 @@ describe('LatchStatus', () => {
     })
   }
 
-  it('shows "Unlatched" when not latched', () => {
+  it('shows "Secured" when not latched', () => {
     const wrapper = factory({ latched: false })
-    expect(wrapper.text()).toContain('Unlatched')
-    expect(wrapper.find('.alert-success').exists()).toBe(true)
+    expect(wrapper.text()).toContain('Secured')
+    // Accent-colored status dot
+    expect(wrapper.find('.bg-accent').exists()).toBe(true)
   })
 
   it('shows "Latched Open" when latched', () => {
     const wrapper = factory({ latched: true })
     expect(wrapper.text()).toContain('Latched Open')
-    expect(wrapper.find('.alert-warning').exists()).toBe(true)
+    // Warning-colored status dot
+    expect(wrapper.find('.bg-warning').exists()).toBe(true)
   })
 
   it('emits "toggle-latch" after confirmation', async () => {
     const wrapper = factory()
-    await wrapper.find('.alert').trigger('click')
+    await wrapper.find('.glass-card').trigger('click')
     // Modal should be open
     expect(wrapper.find('.modal-open').exists()).toBe(true)
     // Click "Yes, Change It"
@@ -37,7 +39,7 @@ describe('LatchStatus', () => {
 
   it('does not emit "toggle-latch" when cancelled', async () => {
     const wrapper = factory()
-    await wrapper.find('.alert').trigger('click')
+    await wrapper.find('.glass-card').trigger('click')
     expect(wrapper.find('.modal-open').exists()).toBe(true)
     // Click "Cancel"
     const cancelBtn = wrapper.findAll('.modal-box .btn').find(b => b.text() === 'Cancel')

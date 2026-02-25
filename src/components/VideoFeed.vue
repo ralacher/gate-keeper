@@ -112,39 +112,39 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="overflow-hidden rounded-box bg-base-200">
+  <div class="glass-card overflow-hidden">
     <!-- Mock / unconfigured placeholder -->
     <div
       v-if="status === 'mock'"
-      class="flex aspect-video items-center justify-center bg-base-300 text-base-content/40"
+      class="flex aspect-video items-center justify-center bg-base-300/50 text-base-content/30"
     >
       <div class="text-center">
-        <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto mb-2 h-10 w-10 opacity-40" viewBox="0 0 20 20" fill="currentColor">
+        <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto mb-2 h-10 w-10 opacity-30" viewBox="0 0 20 20" fill="currentColor">
           <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6zm12.553 1.106A1 1 0 0014 8v4a1 1 0 001.553.832l3-2a1 1 0 000-1.664l-3-2z"/>
         </svg>
         <p class="text-sm font-medium">Camera Feed</p>
-        <p class="text-xs opacity-60">Configure go2rtc to enable</p>
+        <p class="text-xs text-base-content/20 mt-1">Configure go2rtc to enable</p>
       </div>
     </div>
 
     <!-- Connecting spinner -->
     <div
       v-else-if="status === 'connecting'"
-      class="flex aspect-video items-center justify-center bg-base-300"
+      class="flex aspect-video items-center justify-center bg-base-300/50"
     >
-      <span class="loading loading-spinner loading-lg text-primary"></span>
+      <span class="loading loading-spinner loading-lg text-primary/50"></span>
     </div>
 
     <!-- Error state -->
     <div
       v-else-if="status === 'error'"
-      class="flex aspect-video flex-col items-center justify-center gap-2 bg-base-300"
+      class="flex aspect-video flex-col items-center justify-center gap-3 bg-base-300/50"
     >
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-error" viewBox="0 0 20 20" fill="currentColor">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-error/60" viewBox="0 0 20 20" fill="currentColor">
         <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
       </svg>
-      <p class="text-sm text-error">{{ errorMsg }}</p>
-      <button class="btn btn-sm btn-outline btn-primary" @click="connect">
+      <p class="text-sm text-error/70">{{ errorMsg }}</p>
+      <button class="rounded-lg border border-primary/20 bg-primary/10 px-4 py-1.5 text-xs font-medium text-primary transition-all hover:bg-primary/20" @click="connect">
         Retry
       </button>
     </div>

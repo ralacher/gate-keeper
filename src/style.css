@@ -1,3 +1,56 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Import Inter font */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+@layer base {
+  /* Smoother rendering */
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Subtle scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+}
+
+@layer components {
+  /* Glass card effect */
+  .glass-card {
+    @apply rounded-xl border border-white/[0.06] bg-base-200/80 backdrop-blur-sm;
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.03) inset,
+      0 4px 24px -4px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Subtle glow on interactive elements */
+  .glow-primary:hover {
+    box-shadow: 0 0 20px -4px rgba(59, 130, 246, 0.3);
+  }
+  .glow-warning:hover {
+    box-shadow: 0 0 20px -4px rgba(245, 158, 11, 0.3);
+  }
+  .glow-accent:hover {
+    box-shadow: 0 0 20px -4px rgba(16, 185, 129, 0.3);
+  }
+
+  /* Section heading style */
+  .section-label {
+    @apply text-xs font-semibold uppercase tracking-widest text-base-content/40;
+  }
+}

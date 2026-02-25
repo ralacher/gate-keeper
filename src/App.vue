@@ -34,101 +34,112 @@ function onScheduleConfirm(unlatchAt) {
 </script>
 
 <template>
-  <div class="min-h-screen bg-base-100" data-theme="dark">
+  <div class="min-h-screen bg-base-100" data-theme="gate">
+    <!-- Gradient background accent -->
+    <div class="pointer-events-none fixed inset-0 overflow-hidden">
+      <div class="absolute -top-48 left-1/2 h-96 w-[600px] -translate-x-1/2 rounded-full bg-primary/[0.06] blur-3xl"></div>
+    </div>
+
     <!-- Header -->
-    <header class="navbar bg-base-200 shadow-lg">
-      <div class="mx-auto flex w-full max-w-xl items-center justify-between px-4">
-        <div class="flex items-center gap-2">
-          <img src="/gate-icon.svg" alt="Gate" class="h-8 w-8" />
-          <span class="text-lg font-bold tracking-tight">Gate Control</span>
+    <header class="sticky top-0 z-30 border-b border-white/[0.06] bg-base-100/80 backdrop-blur-lg">
+      <div class="mx-auto flex h-14 w-full max-w-xl items-center justify-between px-5">
+        <div class="flex items-center gap-2.5">
+          <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+            <img src="/gate-icon.svg" alt="Gate" class="h-5 w-5" />
+          </div>
+          <span class="text-base font-semibold tracking-tight text-base-content">Gate Control</span>
         </div>
-        <span class="text-xs opacity-50">{{ userEmail }}</span>
+        <span class="rounded-full bg-base-200 px-2.5 py-1 text-[11px] font-medium text-base-content/50">{{ userEmail }}</span>
       </div>
     </header>
 
     <!-- Main content -->
-    <main class="mx-auto max-w-xl px-4 py-6">
+    <main class="relative mx-auto max-w-xl px-5 py-6 space-y-5">
       <!-- Error toast -->
-      <div v-if="error" class="alert alert-error mb-4 shadow-lg">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+      <div v-if="error" class="glass-card flex items-center gap-3 border-error/20 bg-error/10 px-4 py-3">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0 text-error" viewBox="0 0 20 20" fill="currentColor">
           <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
         </svg>
-        <span>{{ error }}</span>
+        <span class="text-sm text-error">{{ error }}</span>
       </div>
 
       <!-- Video feed -->
-      <section class="mb-6">
+      <section>
         <VideoFeed />
       </section>
 
       <!-- Help & Instructions -->
-      <section class="mb-6">
-        <div class="collapse collapse-arrow bg-base-200 rounded-box">
-          <input type="checkbox" />
-          <div class="collapse-title font-semibold flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 opacity-60" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/>
-            </svg>
-            How to Use This App
-          </div>
-          <div class="collapse-content space-y-4 text-sm leading-relaxed">
+      <section>
+        <div class="glass-card overflow-hidden">
+          <details class="group">
+            <summary class="flex cursor-pointer items-center gap-2.5 px-4 py-3 text-sm font-medium text-base-content/70 transition-colors hover:text-base-content">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 opacity-50" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/>
+              </svg>
+              How to Use This App
+              <svg xmlns="http://www.w3.org/2000/svg" class="ml-auto h-4 w-4 opacity-30 transition-transform group-open:rotate-180" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+              </svg>
+            </summary>
+            <div class="border-t border-white/[0.04] px-4 py-4 space-y-3.5 text-sm leading-relaxed">
 
-            <div class="flex gap-3">
-              <span class="text-xl">🔓</span>
-              <div>
-                <p class="font-semibold">Open</p>
-                <p class="opacity-70">Opens the gate for a vehicle to pass through. The gate will close automatically after a short delay.</p>
+              <div class="flex gap-3">
+                <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-base">🔓</span>
+                <div>
+                  <p class="font-medium text-base-content">Open</p>
+                  <p class="text-base-content/50">Opens the gate for a vehicle to pass through. The gate will close automatically after a short delay.</p>
+                </div>
               </div>
-            </div>
 
-            <div class="flex gap-3">
-              <span class="text-xl">🔒</span>
-              <div>
-                <p class="font-semibold">Latch</p>
-                <p class="opacity-70">Opens the gate <em>and</em> holds it open so it won't close on its own. Useful when you're expecting deliveries or guests. You'll be asked for an expected unlatch time so your neighbors know when the gate will be secured again.</p>
+              <div class="flex gap-3">
+                <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-warning/10 text-base">🔒</span>
+                <div>
+                  <p class="font-medium text-base-content">Latch</p>
+                  <p class="text-base-content/50">Opens the gate <em>and</em> holds it open. Useful when expecting deliveries or guests. You'll set an expected unlatch time for your neighbors.</p>
+                </div>
               </div>
-            </div>
 
-            <div class="flex gap-3">
-              <span class="text-xl">✅</span>
-              <div>
-                <p class="font-semibold">Unlatch</p>
-                <p class="opacity-70">Releases the latch so the gate can close and stay closed. Use this when you no longer need the gate held open.</p>
+              <div class="flex gap-3">
+                <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-accent/10 text-base">✅</span>
+                <div>
+                  <p class="font-medium text-base-content">Unlatch</p>
+                  <p class="text-base-content/50">Releases the latch so the gate can close and stay closed.</p>
+                </div>
               </div>
-            </div>
 
-            <div class="divider my-1"></div>
+              <div class="my-2 border-t border-white/[0.04]"></div>
 
-            <div class="flex gap-3">
-              <span class="text-xl">🟡</span>
-              <div>
-                <p class="font-semibold">Status Bar</p>
-                <p class="opacity-70">The colored bar above the buttons shows whether the gate is currently latched open or not. Tap it to manually correct the status if it seems wrong — there is no physical sensor on the latch.</p>
+              <div class="flex gap-3">
+                <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-base-300 text-base">🟡</span>
+                <div>
+                  <p class="font-medium text-base-content">Status Bar</p>
+                  <p class="text-base-content/50">Shows whether the gate is latched open or not. Tap it to manually correct the status if needed.</p>
+                </div>
               </div>
-            </div>
 
-            <div class="flex gap-3">
-              <span class="text-xl">📋</span>
-              <div>
-                <p class="font-semibold">Activity History</p>
-                <p class="opacity-70">Shows a log of who opened, latched, or unlatched the gate and when. This is shared between all neighbors so everyone can stay informed.</p>
+              <div class="flex gap-3">
+                <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-base-300 text-base">📋</span>
+                <div>
+                  <p class="font-medium text-base-content">Activity History</p>
+                  <p class="text-base-content/50">A shared log of who opened, latched, or unlatched the gate and when.</p>
+                </div>
               </div>
-            </div>
 
-            <div class="flex gap-3">
-              <span class="text-xl">⚠️</span>
-              <div>
-                <p class="font-semibold">Safety Note</p>
-                <p class="opacity-70">This app has no way to detect if something is blocking the gate. Always check the camera feed before pressing any button.</p>
+              <div class="flex gap-3 rounded-lg bg-error/5 px-3 py-2.5">
+                <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-error/10 text-base">⚠️</span>
+                <div>
+                  <p class="font-medium text-error/80">Safety Note</p>
+                  <p class="text-base-content/50">Always check the camera feed before pressing any button.</p>
+                </div>
               </div>
-            </div>
 
-          </div>
+            </div>
+          </details>
         </div>
       </section>
 
       <!-- Latch status -->
-      <section class="mb-6 flex justify-center">
+      <section class="flex justify-center">
         <LatchStatus
           :latched="latched"
           :expected-unlatch="expectedUnlatch"
@@ -138,7 +149,7 @@ function onScheduleConfirm(unlatchAt) {
       </section>
 
       <!-- Gate controls -->
-      <section class="mb-8">
+      <section>
         <GateControls
           :active-action="activeAction"
           :latched="latched"
@@ -156,7 +167,9 @@ function onScheduleConfirm(unlatchAt) {
       />
 
       <!-- Divider -->
-      <div class="divider"></div>
+      <div class="flex items-center gap-3 pt-2">
+        <div class="h-px flex-1 bg-gradient-to-r from-transparent via-white/[0.08] to-transparent"></div>
+      </div>
 
       <!-- History -->
       <section class="pb-8">
