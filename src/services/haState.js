@@ -17,8 +17,8 @@
 const rawBaseUrl = import.meta.env.VITE_HA_BASE_URL || ''
 const token = import.meta.env.VITE_HA_TOKEN || ''
 
-// In dev, use Vite proxy to avoid CORS; in production, hit HA directly
-const baseUrl = import.meta.env.DEV ? '/ha-api' : rawBaseUrl
+// Always proxy through /ha-api (Vite dev proxy or nginx in production) to avoid CORS
+const baseUrl = '/ha-api'
 
 const ENTITY = {
   latched: 'input_boolean.gate_latched',

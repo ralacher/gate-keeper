@@ -9,7 +9,7 @@
  */
 
 const config = {
-  baseUrl: import.meta.env.VITE_HA_BASE_URL || 'http://localhost:8123',
+  baseUrl: '/ha-api',
   webhookOpen: import.meta.env.VITE_HA_WEBHOOK_OPEN || '',
   webhookOpenAndLatch: import.meta.env.VITE_HA_WEBHOOK_OPEN_AND_LATCH || '',
   webhookUnlatch: import.meta.env.VITE_HA_WEBHOOK_UNLATCH || '',
