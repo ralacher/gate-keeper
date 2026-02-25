@@ -1,6 +1,6 @@
 services:
   gate:
-    image: ghcr.io/robertlacher/bob-cox-gate:latest
+    image: ghcr.io/ralacher/gate-keeper:latest
     container_name: gate-keeper
     restart: unless-stopped
     ports:
