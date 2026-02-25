@@ -1,0 +1,162 @@
+<script setup>
+import { ref, onMounted, onBeforeUnmount } from 'vue'
+
+const go2rtcUrl = import.meta.env.VITE_GO2RTC_URL || ''
+const go2rtcStream = import.meta.env.VITE_GO2RTC_STREAM || ''
+const isMock = !go2rtcUrl || !go2rtcStream
+
+// In dev, use Vite proxy to avoid CORS; in production, hit go2rtc directly
+const go2rtcBase = import.meta.env.DEV ? '/go2rtc' : go2rtcUrl
+
+const videoEl = ref(null)
+const status = ref('idle') // idle | connecting | connected | error
+const errorMsg = ref('')
+
+let pc = null
+
+async function connect() {
+  if (isMock || !go2rtcUrl || !go2rtcStream) {
+    status.value = 'mock'
+    return
+  }
+
+  status.value = 'connecting'
+  errorMsg.value = ''
+
+  try {
+    pc = new RTCPeerConnection({
+      iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
+    })
+
+    pc.ontrack = (event) => {
+      if (videoEl.value) {
+        videoEl.value.srcObject = event.streams[0]
+      }
+    }
+
+    pc.oniceconnectionstatechange = () => {
+      if (pc.iceConnectionState === 'connected') {
+        status.value = 'connected'
+      } else if (pc.iceConnectionState === 'failed' || pc.iceConnectionState === 'disconnected') {
+        status.value = 'error'
+        errorMsg.value = 'Stream connection lost'
+      }
+    }
+
+    // We need to add a transceiver to receive video
+    pc.addTransceiver('video', { direction: 'recvonly' })
+    pc.addTransceiver('audio', { direction: 'recvonly' })
+
+    const offer = await pc.createOffer()
+    await pc.setLocalDescription(offer)
+
+    // Wait for ICE gathering to complete (or timeout)
+    await new Promise((resolve) => {
+      if (pc.iceGatheringState === 'complete') {
+        resolve()
+      } else {
+        const check = () => {
+          if (pc.iceGatheringState === 'complete') {
+            pc.removeEventListener('icegatheringstatechange', check)
+            resolve()
+          }
+        }
+        pc.addEventListener('icegatheringstatechange', check)
+        // Timeout fallback
+        setTimeout(resolve, 3000)
+      }
+    })
+
+    // Send offer to go2rtc
+    const apiUrl = `${go2rtcBase}/api/webrtc?src=${encodeURIComponent(go2rtcStream)}`
+    const resp = await fetch(apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/sdp' },
+      body: pc.localDescription.sdp,
+    })
+
+    if (!resp.ok) {
+      throw new Error(`go2rtc returned ${resp.status}`)
+    }
+
+    const answerSdp = await resp.text()
+    await pc.setRemoteDescription(new RTCSessionDescription({
+      type: 'answer',
+      sdp: answerSdp,
+    }))
+  } catch (err) {
+    console.error('WebRTC connection failed:', err)
+    status.value = 'error'
+    errorMsg.value = err.message || 'Failed to connect to video stream'
+  }
+}
+
+function disconnect() {
+  if (pc) {
+    pc.close()
+    pc = null
+  }
+  if (videoEl.value) {
+    videoEl.value.srcObject = null
+  }
+  status.value = 'idle'
+}
+
+onMounted(() => {
+  connect()
+})
+
+onBeforeUnmount(() => {
+  disconnect()
+})
+</script>
+
+<template>
+  <div class="overflow-hidden rounded-box bg-base-200">
+    <!-- Mock / unconfigured placeholder -->
+    <div
+      v-if="status === 'mock'"
+      class="flex aspect-video items-center justify-center bg-base-300 text-base-content/40"
+    >
+      <div class="text-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto mb-2 h-10 w-10 opacity-40" viewBox="0 0 20 20" fill="currentColor">
+          <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6zm12.553 1.106A1 1 0 0014 8v4a1 1 0 001.553.832l3-2a1 1 0 000-1.664l-3-2z"/>
+        </svg>
+        <p class="text-sm font-medium">Camera Feed</p>
+        <p class="text-xs opacity-60">Configure go2rtc to enable</p>
+      </div>
+    </div>
+
+    <!-- Connecting spinner -->
+    <div
+      v-else-if="status === 'connecting'"
+      class="flex aspect-video items-center justify-center bg-base-300"
+    >
+      <span class="loading loading-spinner loading-lg text-primary"></span>
+    </div>
+
+    <!-- Error state -->
+    <div
+      v-else-if="status === 'error'"
+      class="flex aspect-video flex-col items-center justify-center gap-2 bg-base-300"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-error" viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+      </svg>
+      <p class="text-sm text-error">{{ errorMsg }}</p>
+      <button class="btn btn-sm btn-outline btn-primary" @click="connect">
+        Retry
+      </button>
+    </div>
+
+    <!-- Video player -->
+    <video
+      v-show="status === 'connected' || status === 'idle'"
+      ref="videoEl"
+      class="aspect-video w-full bg-black"
+      autoplay
+      playsinline
+      muted
+    />
+  </div>
+</template>
