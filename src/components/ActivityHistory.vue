@@ -51,8 +51,9 @@ function formatTime(iso) {
                 class="badge badge-sm"
                 :class="{
                   'badge-primary': entry.action === 'Opened gate',
-                  'badge-warning': entry.action === 'Opened & latched gate',
+                  'badge-warning': entry.action?.startsWith('Opened & latched'),
                   'badge-accent': entry.action === 'Unlatched gate',
+                  'badge-info': entry.action?.startsWith('Manual correction'),
                 }"
               >
                 {{ entry.action }}

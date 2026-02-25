@@ -23,7 +23,9 @@ export function useGate() {
   const error = ref(null)
   const history = ref([])
   const expectedUnlatch = ref(null) // { time: ISO, user: string } or null — display only
+  const countdown = ref(0) // seconds remaining after gate opens
   let pollTimer = null
+  let countdownTimer = null
 
   // Read user e-mail — will come from Cloudflare header via a server endpoint.
   // For now, falls back to a default for local dev.
@@ -37,6 +39,19 @@ export function useGate() {
       action,
     })
     saveHistory(history.value) // fire-and-forget
+  }
+
+  function startCountdown() {
+    countdown.value = 15
+    countdownTimer = setInterval(() => {
+      countdown.value--
+      if (countdown.value <= 0) {
+        clearInterval(countdownTimer)
+        countdownTimer = null
+        countdown.value = 0
+        activeAction.value = null
+      }
+    }, 1000)
   }
 
   /** Hydrate refs from HA (or fall back to defaults). */
@@ -57,9 +72,9 @@ export function useGate() {
     try {
       await openGate()
       addHistoryEntry('Opened gate')
+      startCountdown()
     } catch (err) {
       error.value = 'Failed to open gate'
-    } finally {
       activeAction.value = null
     }
   }
@@ -79,9 +94,9 @@ export function useGate() {
       } else {
         addHistoryEntry('Opened & latched gate')
       }
+      startCountdown()
     } catch (err) {
       error.value = 'Failed to open & latch gate'
-    } finally {
       activeAction.value = null
     }
   }
@@ -146,11 +161,16 @@ export function useGate() {
       clearInterval(pollTimer)
       pollTimer = null
     }
+    if (countdownTimer) {
+      clearInterval(countdownTimer)
+      countdownTimer = null
+    }
   })
 
   return {
     latched,
     activeAction,
+    countdown,
     error,
     history,
     userEmail,
