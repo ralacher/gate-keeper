@@ -5,6 +5,17 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
+
+# Accept VITE_ build args so Vite inlines them into the JS bundle
+ARG VITE_HA_BASE_URL
+ARG VITE_HA_TOKEN
+ARG VITE_HA_WEBHOOK_OPEN
+ARG VITE_HA_WEBHOOK_OPEN_AND_LATCH
+ARG VITE_HA_WEBHOOK_UNLATCH
+ARG VITE_GO2RTC_URL
+ARG VITE_GO2RTC_STREAM
+ARG VITE_MOCK
+
 RUN npm run build
 
 # ── Stage 2: Serve ────────────────────────────────────────────

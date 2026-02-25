@@ -1,15 +1,20 @@
 services:
   gate:
-    build: .
+    build:
+      context: .
+      args:
+        - VITE_HA_BASE_URL=${VITE_HA_BASE_URL}
+        - VITE_HA_TOKEN=${VITE_HA_TOKEN}
+        - VITE_HA_WEBHOOK_OPEN=${VITE_HA_WEBHOOK_OPEN}
+        - VITE_HA_WEBHOOK_OPEN_AND_LATCH=${VITE_HA_WEBHOOK_OPEN_AND_LATCH}
+        - VITE_HA_WEBHOOK_UNLATCH=${VITE_HA_WEBHOOK_UNLATCH}
+        - VITE_GO2RTC_URL=${VITE_GO2RTC_URL}
+        - VITE_GO2RTC_STREAM=${VITE_GO2RTC_STREAM}
+        - VITE_MOCK=${VITE_MOCK}
     container_name: gate-keeper
     restart: unless-stopped
     ports:
       - "3080:80"
     environment:
-      - VITE_HA_BASE_URL=${VITE_HA_BASE_URL}
-      - VITE_HA_TOKEN=${VITE_HA_TOKEN}
-      - VITE_HA_WEBHOOK_OPEN=${VITE_HA_WEBHOOK_OPEN}
-      - VITE_HA_WEBHOOK_OPEN_AND_LATCH=${VITE_HA_WEBHOOK_OPEN_AND_LATCH}
-      - VITE_HA_WEBHOOK_UNLATCH=${VITE_HA_WEBHOOK_UNLATCH}
-      - VITE_GO2RTC_URL=${VITE_GO2RTC_URL}
-      - VITE_GO2RTC_STREAM=${VITE_GO2RTC_STREAM}
+      - HA_BASE_URL=${HA_BASE_URL}
+      - GO2RTC_URL=${GO2RTC_URL}
