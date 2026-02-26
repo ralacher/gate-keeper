@@ -90,12 +90,7 @@ export async function loadGateState() {
         expectedUnlatch = { time: eu, user: '' }
       }
     }
-    let historyEntries = []
-    try {
-      historyEntries = historyEntity?.attributes?.entries || []
-    } catch {
-      /* empty */
-    }
+    const historyEntries = historyEntity?.attributes?.entries || []
 
     return {
       latched: latchEntity.state === 'on',
