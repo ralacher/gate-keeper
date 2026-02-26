@@ -17,6 +17,11 @@ import {
   sendPushNotification,
   isPushSubscribed,
 } from '../services/pushService.js'
+import {
+  featureFlags,
+  isOpenAndLatchEnabled,
+  isUnlatchEnabled,
+} from '../config/featureFlags.js'
 
 // How often (ms) to poll HA for state changes from other users
 const POLL_INTERVAL_MS = 15_000
@@ -96,6 +101,11 @@ export function useGate() {
   }
 
   async function handleOpenAndLatch(unlatchAt) {
+    if (!isOpenAndLatchEnabled()) {
+      error.value = 'Open & latch is disabled in configuration'
+      return
+    }
+
     activeAction.value = 'open-and-latch'
     error.value = null
     try {
@@ -118,6 +128,11 @@ export function useGate() {
   }
 
   async function handleUnlatch() {
+    if (!isUnlatchEnabled()) {
+      error.value = 'Unlatch is disabled in configuration'
+      return
+    }
+
     activeAction.value = 'unlatch'
     error.value = null
     try {
@@ -251,6 +266,7 @@ export function useGate() {
     expectedUnlatch,
     notificationsEnabled,
     isLoading,
+    featureFlags,
     handleOpen,
     handleOpenAndLatch,
     handleUnlatch,

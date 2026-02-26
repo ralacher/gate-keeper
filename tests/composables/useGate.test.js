@@ -31,6 +31,16 @@ vi.mock('../../src/services/pushService.js', () => ({
   isPushSubscribed: vi.fn(() => Promise.resolve(false)),
 }))
 
+vi.mock('../../src/config/featureFlags.js', () => ({
+  featureFlags: {
+    openAndLatchEnabled: true,
+    unlatchEnabled: true,
+  },
+  isOpenAndLatchEnabled: vi.fn(() => true),
+  isUnlatchEnabled: vi.fn(() => true),
+  isAnyLatchActionEnabled: vi.fn(() => true),
+}))
+
 // Mock fetch for /api/me
 global.fetch = vi.fn(() =>
   Promise.resolve({ ok: false }),
@@ -40,6 +50,7 @@ import { useGate } from '../../src/composables/useGate.js'
 import * as gateApi from '../../src/services/gateApi.js'
 import * as haState from '../../src/services/haState.js'
 import * as pushService from '../../src/services/pushService.js'
+import * as featureFlags from '../../src/config/featureFlags.js'
 
 // Helper: mount useGate inside a real component to get Vue lifecycle
 function mountComposable() {
@@ -61,6 +72,8 @@ describe('useGate', () => {
   beforeEach(() => {
     vi.useFakeTimers()
     vi.clearAllMocks()
+    featureFlags.isOpenAndLatchEnabled.mockReturnValue(true)
+    featureFlags.isUnlatchEnabled.mockReturnValue(true)
   })
 
   afterEach(() => {
@@ -167,6 +180,21 @@ describe('useGate', () => {
     wrapper.unmount()
   })
 
+  it('handleOpenAndLatch returns early when feature flag is disabled', async () => {
+    featureFlags.isOpenAndLatchEnabled.mockReturnValue(false)
+
+    const { result, wrapper } = mountComposable()
+    await nextTick()
+
+    await result.handleOpenAndLatch('2026-03-01T10:00:00')
+    await nextTick()
+
+    expect(gateApi.openAndLatchGate).not.toHaveBeenCalled()
+    expect(result.error.value).toBe('Open & latch is disabled in configuration')
+
+    wrapper.unmount()
+  })
+
   it('handleUnlatch clears latch state and expected unlatch', async () => {
     const { result, wrapper } = mountComposable()
     await nextTick()
@@ -184,6 +212,21 @@ describe('useGate', () => {
     expect(result.activeAction.value).toBeNull() // no countdown for unlatch
     expect(haState.saveLatchState).toHaveBeenCalledWith(false)
     expect(haState.saveExpectedUnlatch).toHaveBeenCalledWith(null)
+
+    wrapper.unmount()
+  })
+
+  it('handleUnlatch returns early when feature flag is disabled', async () => {
+    featureFlags.isUnlatchEnabled.mockReturnValue(false)
+
+    const { result, wrapper } = mountComposable()
+    await nextTick()
+
+    await result.handleUnlatch()
+    await nextTick()
+
+    expect(gateApi.unlatchGate).not.toHaveBeenCalled()
+    expect(result.error.value).toBe('Unlatch is disabled in configuration')
 
     wrapper.unmount()
   })

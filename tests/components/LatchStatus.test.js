@@ -43,6 +43,14 @@ describe('LatchStatus', () => {
     expect(wrapper.find('button.glass-card').exists()).toBe(true)
   })
 
+  it('renders non-interactive status when manual toggle is disabled', () => {
+    const wrapper = factory({ manualToggleEnabled: false })
+    expect(wrapper.find('button.glass-card').exists()).toBe(false)
+    const status = wrapper.find('[role="status"]')
+    expect(status.exists()).toBe(true)
+    expect(status.text()).toContain('Secured')
+  })
+
   it('status button has a descriptive aria-label', () => {
     const wrapper = factory({ latched: false })
     const btn = wrapper.find('button.glass-card')

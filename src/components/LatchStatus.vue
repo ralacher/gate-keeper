@@ -5,6 +5,7 @@ import { haptic } from '../utils/haptic.js'
 const props = defineProps({
   latched: Boolean,
   expectedUnlatch: Object, // { time: ISO, user: string } or null
+  manualToggleEnabled: { type: Boolean, default: true },
 })
 
 const emit = defineEmits(['toggle-latch', 'clear-expected'])
@@ -42,6 +43,7 @@ function formatExpectedTime(iso) {
 
     <!-- Latch status — interactive button so keyboard/screen-reader users can activate it -->
     <button
+      v-if="props.manualToggleEnabled"
       type="button"
       class="glass-card flex w-full cursor-pointer items-center gap-3 px-4 py-3 transition-all duration-200 hover:opacity-90 active:scale-[0.98] text-left"
       :class="latched
@@ -71,8 +73,33 @@ function formatExpectedTime(iso) {
       </svg>
     </button>
 
+    <div
+      v-else
+      class="glass-card flex w-full items-center gap-3 px-4 py-3 text-left"
+      :class="latched
+        ? 'border-warning/20 bg-warning/[0.06]'
+        : 'border-accent/20 bg-accent/[0.06]'"
+      aria-label="Gate latch status"
+      role="status"
+    >
+      <div
+        class="h-2.5 w-2.5 shrink-0 rounded-full"
+        :class="latched ? 'bg-warning shadow-[0_0_8px_rgba(245,158,11,0.5)]' : 'bg-accent shadow-[0_0_8px_rgba(16,185,129,0.5)]'"
+        aria-hidden="true"
+      ></div>
+
+      <div class="flex items-center gap-2 min-w-0">
+        <span class="text-sm font-semibold whitespace-nowrap" :class="latched ? 'text-warning' : 'text-accent'">
+          {{ latched ? 'Latched Open' : 'Secured' }}
+        </span>
+        <span class="text-xs text-base-content/40 whitespace-nowrap">
+          {{ latched ? 'Gate is held open' : 'Gate will close normally' }}
+        </span>
+      </div>
+    </div>
+
     <!-- Confirmation modal -->
-    <dialog class="modal" :class="{ 'modal-open': showConfirm }" aria-labelledby="latch-modal-title">
+    <dialog v-if="props.manualToggleEnabled" class="modal" :class="{ 'modal-open': showConfirm }" aria-labelledby="latch-modal-title">
       <div class="modal-box border border-base-content/[0.06] bg-base-200">
         <h3 id="latch-modal-title" class="text-lg font-bold">Change Latch Status</h3>
         <p class="py-4 text-base-content/70">

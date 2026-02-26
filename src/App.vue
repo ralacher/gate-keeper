@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useGate } from './composables/useGate.js'
 import { useTheme } from './composables/useTheme.js'
 import AppHeader from './components/AppHeader.vue'
@@ -21,6 +21,7 @@ const {
   userEmail,
   expectedUnlatch,
   notificationsEnabled,
+  featureFlags,
   handleOpen,
   handleOpenAndLatch,
   handleUnlatch,
@@ -31,7 +32,12 @@ const {
 
 const { resolvedTheme } = useTheme()
 
+const manualLatchUiEnabled = computed(
+  () => featureFlags.openAndLatchEnabled || featureFlags.unlatchEnabled,
+)
+
 function onOpenAndLatchClick() {
+  if (!featureFlags.openAndLatchEnabled) return
   schedulerModal.value?.open()
 }
 
@@ -103,7 +109,7 @@ function onScheduleConfirm(unlatchAt) {
                   </div>
                 </div>
 
-                <div class="flex gap-3">
+                <div v-if="manualLatchUiEnabled" class="flex gap-3">
                   <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-warning/10 text-base" aria-hidden="true">🔒</span>
                   <div>
                     <p class="font-medium text-base-content">Latch</p>
@@ -111,7 +117,7 @@ function onScheduleConfirm(unlatchAt) {
                   </div>
                 </div>
 
-                <div class="flex gap-3">
+                <div v-if="manualLatchUiEnabled" class="flex gap-3">
                   <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-accent/10 text-base" aria-hidden="true">✅</span>
                   <div>
                     <p class="font-medium text-base-content">Unlatch</p>
@@ -121,7 +127,7 @@ function onScheduleConfirm(unlatchAt) {
 
                 <div class="my-2 border-t border-base-content/[0.04]"></div>
 
-                <div class="flex gap-3">
+                <div v-if="manualLatchUiEnabled" class="flex gap-3">
                   <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-base-300 text-base" aria-hidden="true">🟡</span>
                   <div>
                     <p class="font-medium text-base-content">Status Bar</p>
@@ -155,6 +161,7 @@ function onScheduleConfirm(unlatchAt) {
           <LatchStatus
             :latched="latched"
             :expected-unlatch="expectedUnlatch"
+            :manual-toggle-enabled="manualLatchUiEnabled"
             @clear-expected="clearExpectedUnlatch"
             @toggle-latch="toggleLatchState"
           />
@@ -166,6 +173,8 @@ function onScheduleConfirm(unlatchAt) {
             :active-action="activeAction"
             :latched="latched"
             :countdown="countdown"
+            :open-and-latch-enabled="featureFlags.openAndLatchEnabled"
+            :unlatch-enabled="featureFlags.unlatchEnabled"
             @open="handleOpen"
             @open-and-latch="onOpenAndLatchClick"
             @unlatch="handleUnlatch"

@@ -9,6 +9,8 @@ describe('GateControls', () => {
         activeAction: null,
         latched: false,
         countdown: 0,
+        openAndLatchEnabled: true,
+        unlatchEnabled: true,
         ...props,
       },
     })
@@ -66,11 +68,27 @@ describe('GateControls', () => {
     expect(wrapper.emitted('open-and-latch')).toBeTruthy()
   })
 
+  it('disables Latch button when open-and-latch feature is off', async () => {
+    const wrapper = factory({ openAndLatchEnabled: false })
+    const buttons = wrapper.findAll('button')
+    expect(buttons[1].attributes('disabled')).toBeDefined()
+    await buttons[1].trigger('click')
+    expect(wrapper.emitted('open-and-latch')).toBeFalsy()
+  })
+
   it('emits "unlatch" when Unlatch button is clicked', async () => {
     const wrapper = factory({ latched: true })
     const buttons = wrapper.findAll('button')
     await buttons[2].trigger('click')
     expect(wrapper.emitted('unlatch')).toBeTruthy()
+  })
+
+  it('disables Unlatch button when unlatch feature is off', async () => {
+    const wrapper = factory({ latched: true, unlatchEnabled: false })
+    const buttons = wrapper.findAll('button')
+    expect(buttons[2].attributes('disabled')).toBeDefined()
+    await buttons[2].trigger('click')
+    expect(wrapper.emitted('unlatch')).toBeFalsy()
   })
 
   it('shows spinner when action is active with no countdown', () => {
