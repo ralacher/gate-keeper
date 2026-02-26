@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 
 const go2rtcUrl = import.meta.env.VITE_GO2RTC_URL || ''
 const go2rtcStream = import.meta.env.VITE_GO2RTC_STREAM || ''
@@ -7,6 +7,18 @@ const isMock = !go2rtcUrl || !go2rtcStream
 
 // Always proxy through /go2rtc (Vite dev proxy or nginx in production) to avoid CORS
 const go2rtcBase = '/go2rtc'
+
+// CSS crop configuration (from env)
+const cropScale = parseFloat(import.meta.env.VITE_VIDEO_CROP_SCALE) || 0
+const cropOriginX = import.meta.env.VITE_VIDEO_CROP_ORIGIN_X || '0%'
+const cropOriginY = import.meta.env.VITE_VIDEO_CROP_ORIGIN_Y || '0%'
+const isCropped = cropScale > 1
+
+const cropStyle = computed(() =>
+  isCropped
+    ? { transform: `scale(${cropScale})`, transformOrigin: `${cropOriginX} ${cropOriginY}` }
+    : {},
+)
 
 // Delay before auto-reconnect after a dropped connection (ms)
 const RECONNECT_DELAY_MS = 3000
@@ -176,14 +188,15 @@ onBeforeUnmount(() => {
       </button>
     </div>
 
-    <!-- Video player — CSS crop to top-left quadrant -->
+    <!-- Video player (optionally CSS-cropped via VITE_VIDEO_CROP_* env vars) -->
     <div
       v-show="status === 'connected' || status === 'idle'"
       class="aspect-video w-full overflow-hidden"
     >
       <video
         ref="videoEl"
-        class="h-[200%] w-[200%] origin-top-left bg-black"
+        class="aspect-video w-full bg-black"
+        :style="cropStyle"
         autoplay
         playsinline
         muted
