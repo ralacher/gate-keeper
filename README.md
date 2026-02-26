@@ -30,6 +30,42 @@ The signed-in user's e-mail address is captured from Cloudflare headers (`CF-Acc
 
 An embedded WebRTC video stream from go2rtc (built into Home Assistant). Shows a live view of the gate camera with low latency. Falls back to a placeholder when not configured.
 
+### Gate Position Detection (Experimental)
+
+An optional feature that infers whether the gate is **open** or **closed** by periodically sampling a small region of the camera feed and measuring its average brightness.
+
+> **Note:** This is not a substitute for a hardware sensor. Accuracy depends on lighting, camera angle, and how distinct the gate looks against its background. It works best as a rough visual indicator.
+
+#### How It Works
+
+1. Every N milliseconds (default 2 000), a square patch of pixels is grabbed from the live video frame using a hidden `<canvas>`.
+2. The weighted luminance (BT.601) of every pixel in that patch is averaged to produce a single brightness value (0–255).
+3. If the brightness is **≥ threshold** → the gate is reported as "open"; **< threshold** → "closed" (invertible via `VITE_GATE_DETECT_OPEN_ABOVE`).
+
+When enabled, the video overlay shows:
+
+- A **crosshair** at the sample point (auto-centered on the POI rectangle if one is configured).
+- A **badge** in the top-left corner displaying the detected state and the live brightness reading (`B:142`), useful for calibration.
+
+#### Crosshair Placement
+
+The sample point should be placed where the gate **blocks the view when closed** and **reveals the background when open**. For a gate with narrow vertical bars against a backdrop (e.g. a green tarp):
+
+- **Option A — target a solid element:** Place the crosshair on a gate post, hinge, or horizontal rail that disappears when the gate swings away.
+- **Option B — sample a wider area:** Increase `VITE_GATE_DETECT_SAMPLE_SIZE` (e.g. `60`) so the patch spans multiple bars + gaps. The average brightness of bars-over-background will differ from pure background.
+
+Avoid placing the crosshair in a gap *between* bars — the background will be visible regardless of gate position.
+
+If a POI rectangle is configured (`VITE_VIDEO_POI_*`), the crosshair and sample point automatically default to its centre. You can override this with explicit `VITE_GATE_DETECT_SAMPLE_X/Y` values.
+
+#### Calibration
+
+1. Enable the feature: `VITE_FEATURE_GATE_DETECTION_ENABLED=true`.
+2. Open the app and watch the `B:` value in the badge.
+3. Note the brightness when the gate is **closed** and when it is **open**.
+4. Set `VITE_GATE_DETECT_THRESHOLD` halfway between the two readings.
+5. If the closed state is *darker* than open, keep `VITE_GATE_DETECT_OPEN_ABOVE=true`. If the closed state is *brighter*, set it to `false`.
+
 ### Activity History
 
 A table displays a chronological log of all gate operations:
@@ -74,6 +110,13 @@ All connection parameters are provided via environment variables — nothing is 
 | `VITE_GO2RTC_STREAM` | go2rtc stream name | `gate_camera` |
 | `VITE_MOCK` | Use simulated responses (`true`/`false`) | `true` |
 | `VITE_FEATURE_LATCH_ENABLED` | Enable/disable all latch controls (Open & Latch, Unlatch, latch status toggle) | `true` |
+| `VITE_FEATURE_GATE_DETECTION_ENABLED` | Enable experimental pixel-sampling gate-position detection | `false` |
+| `VITE_GATE_DETECT_SAMPLE_X` | Sample point horizontal centre (% of raw video, 0–100) | `50` |
+| `VITE_GATE_DETECT_SAMPLE_Y` | Sample point vertical centre (% of raw video, 0–100) | `50` |
+| `VITE_GATE_DETECT_SAMPLE_SIZE` | Side length in px of the square sample area | `20` |
+| `VITE_GATE_DETECT_INTERVAL` | Polling interval in ms | `2000` |
+| `VITE_GATE_DETECT_THRESHOLD` | Brightness threshold (0–255) dividing open/closed | `128` |
+| `VITE_GATE_DETECT_OPEN_ABOVE` | `true` = brightness ≥ threshold means open | `true` |
 
 **Runtime variables** (server-side only — never exposed to the browser):
 

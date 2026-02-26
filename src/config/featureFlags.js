@@ -19,10 +19,20 @@ const latchEnabled = parseBooleanFlag(
   true,
 )
 
+const gateDetectionEnabled = parseBooleanFlag(
+  import.meta.env.VITE_FEATURE_GATE_DETECTION_ENABLED,
+  false,
+)
+
 export const featureFlags = {
   latchEnabled,
+  gateDetectionEnabled,
 }
 
 export function isLatchEnabled() {
   return featureFlags.latchEnabled
+}
+
+export function isGateDetectionEnabled() {
+  return featureFlags.gateDetectionEnabled
 }

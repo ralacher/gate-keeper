@@ -36,6 +36,12 @@ const manualLatchUiEnabled = computed(
   () => featureFlags.latchEnabled,
 )
 
+const detectedGateState = ref('unknown') // from VideoFeed pixel sampling
+
+function onGateState(state) {
+  detectedGateState.value = state
+}
+
 function onOpenAndLatchClick() {
   if (!featureFlags.latchEnabled) return
   schedulerModal.value?.open()
@@ -83,7 +89,7 @@ function onScheduleConfirm(unlatchAt) {
       <template v-else>
         <!-- Video feed -->
         <section>
-          <VideoFeed />
+          <VideoFeed @gate-state="onGateState" />
         </section>
 
         <!-- Help & Instructions -->

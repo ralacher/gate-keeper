@@ -1,5 +1,7 @@
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
+import { useGateDetection } from '../composables/useGateDetection.js'
+import { isGateDetectionEnabled } from '../config/featureFlags.js'
 
 const go2rtcUrl = import.meta.env.VITE_GO2RTC_URL || ''
 const go2rtcStream = import.meta.env.VITE_GO2RTC_STREAM || ''
@@ -41,10 +43,98 @@ const poiStyle = computed(() =>
     : {},
 )
 
+// ── Gate detection via pixel sampling ─────────────────────────
+const gateDetectionEnabled = isGateDetectionEnabled()
+
+// Env-level overrides (fallback to POI center → 50% if neither is set)
+const envSampleX = import.meta.env.VITE_GATE_DETECT_SAMPLE_X
+const envSampleY = import.meta.env.VITE_GATE_DETECT_SAMPLE_Y
+
+// If the POI rectangle is defined, default the sample point to its centre
+// (in raw-video coordinates, reverse-mapped from the cropped viewport).
+function poiCenterToRaw(axis) {
+  const left = parseFloat(axis === 'x' ? poiLeft : poiTop) || 0
+  const size = parseFloat(axis === 'x' ? poiWidth : poiHeight) || 0
+  const centerViewport = left + size / 2 // % of cropped viewport
+
+  if (!isCropped) return centerViewport
+
+  const originPct = parseFloat(axis === 'x' ? cropOriginX : cropOriginY) || 0
+  const visibleSpan = 100 / cropScale
+  return originPct + (centerViewport / 100) * visibleSpan
+}
+
+const detectSampleX = envSampleX ? parseFloat(envSampleX) : (showPoi ? poiCenterToRaw('x') : 50)
+const detectSampleY = envSampleY ? parseFloat(envSampleY) : (showPoi ? poiCenterToRaw('y') : 50)
+const detectSampleSize = parseInt(import.meta.env.VITE_GATE_DETECT_SAMPLE_SIZE, 10) || 20
+const detectInterval = parseInt(import.meta.env.VITE_GATE_DETECT_INTERVAL, 10) || 2000
+const detectThreshold = parseInt(import.meta.env.VITE_GATE_DETECT_THRESHOLD, 10) || 128
+const detectOpenAbove = (import.meta.env.VITE_GATE_DETECT_OPEN_ABOVE ?? 'true') !== 'false'
+
+const emit = defineEmits(['gate-state'])
+
+const videoEl = ref(null)
+
+const {
+  detectedState,
+  brightness,
+  isActive: detectionActive,
+  start: startDetection,
+  stop: stopDetection,
+  sample: sampleOnce,
+} = useGateDetection(videoEl, {
+  sampleX: detectSampleX,
+  sampleY: detectSampleY,
+  sampleSize: detectSampleSize,
+  interval: detectInterval,
+  threshold: detectThreshold,
+  openAbove: detectOpenAbove,
+  enabled: gateDetectionEnabled,
+})
+
+// Emit detected gate state changes to parent
+watch(detectedState, (state) => {
+  emit('gate-state', state)
+})
+
+// Crosshair position in viewport-% coordinates.
+// When SAMPLE_X/Y are explicitly set, we use those (converted to viewport coords).
+// Otherwise fall back to the POI rectangle centre.
+const hasExplicitSample = !!(envSampleX || envSampleY)
+
+function rawToViewport(rawPct, axis) {
+  if (!isCropped) return rawPct
+  const originPct = parseFloat(axis === 'x' ? cropOriginX : cropOriginY) || 0
+  const visibleSpan = 100 / cropScale
+  return ((rawPct - originPct) / visibleSpan) * 100
+}
+
+const sampleOverlayStyle = computed(() => {
+  if (!gateDetectionEnabled) return { display: 'none' }
+
+  if (hasExplicitSample) {
+    // Explicit env override — convert raw-video % to viewport %
+    return {
+      left: `${rawToViewport(detectSampleX, 'x')}%`,
+      top: `${rawToViewport(detectSampleY, 'y')}%`,
+    }
+  }
+
+  if (showPoi) {
+    const cx = parseFloat(poiLeft) + parseFloat(poiWidth) / 2
+    const cy = parseFloat(poiTop) + parseFloat(poiHeight) / 2
+    return { left: `${cx}%`, top: `${cy}%` }
+  }
+
+  return {
+    left: `${rawToViewport(detectSampleX, 'x')}%`,
+    top: `${rawToViewport(detectSampleY, 'y')}%`,
+  }
+})
+
 // Delay before auto-reconnect after a dropped connection (ms)
 const RECONNECT_DELAY_MS = 3000
 
-const videoEl = ref(null)
 const status = ref('idle') // idle | connecting | connected | error
 const errorMsg = ref('')
 
@@ -74,7 +164,9 @@ async function connect() {
     pc.oniceconnectionstatechange = () => {
       if (pc.iceConnectionState === 'connected') {
         status.value = 'connected'
+        startDetection()
       } else if (pc.iceConnectionState === 'failed' || pc.iceConnectionState === 'disconnected') {
+        stopDetection()
         scheduleReconnect()
       }
     }
@@ -140,6 +232,7 @@ function scheduleReconnect() {
 }
 
 function disconnect() {
+  stopDetection()
   if (reconnectTimer) {
     clearTimeout(reconnectTimer)
     reconnectTimer = null
@@ -237,6 +330,48 @@ onBeforeUnmount(() => {
           :style="{ backgroundColor: poiColor }"
         >{{ poiLabel }}</span>
       </div>
+
+      <!-- Gate detection sample crosshair + brightness readout -->
+      <template v-if="gateDetectionEnabled && detectionActive">
+        <!-- Crosshair at sample point -->
+        <div
+          class="pointer-events-none absolute h-10 w-10 -translate-x-1/2 -translate-y-1/2"
+          :style="sampleOverlayStyle"
+          aria-hidden="true"
+        >
+          <!-- Horizontal line (dark outline + bright core) -->
+          <div class="absolute inset-x-0 top-1/2 h-[3px] -translate-y-1/2 rounded-full bg-black/50"></div>
+          <div class="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-white"></div>
+          <!-- Vertical line (dark outline + bright core) -->
+          <div class="absolute inset-y-0 left-1/2 w-[3px] -translate-x-1/2 rounded-full bg-black/50"></div>
+          <div class="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-white"></div>
+          <!-- Centre dot -->
+          <div class="absolute left-1/2 top-1/2 h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-red-500 shadow-[0_0_4px_rgba(239,68,68,0.8)]"></div>
+        </div>
+
+        <!-- Detection badge (top-left of video) -->
+        <div
+          class="pointer-events-none absolute top-2 left-2 flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10px] font-semibold text-white drop-shadow-md"
+          :class="detectedState === 'open'
+            ? 'bg-success/80'
+            : detectedState === 'closed'
+              ? 'bg-error/80'
+              : 'bg-base-content/40'"
+          role="status"
+          :aria-label="`Gate detected as ${detectedState}`"
+        >
+          <span
+            class="inline-block h-1.5 w-1.5 rounded-full"
+            :class="detectedState === 'open'
+              ? 'bg-green-300'
+              : detectedState === 'closed'
+                ? 'bg-red-300'
+                : 'bg-gray-300'"
+          ></span>
+          {{ detectedState === 'open' ? 'Open' : detectedState === 'closed' ? 'Closed' : '…' }}
+          <span class="ml-0.5 font-normal opacity-70">B:{{ brightness }}</span>
+        </div>
+      </template>
     </div>
   </div>
 </template>
