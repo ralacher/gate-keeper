@@ -8,3 +8,11 @@ services:
     environment:
       - HA_BASE_URL=${HA_BASE_URL}
       - GO2RTC_URL=${GO2RTC_URL}
+      - VAPID_PUBLIC_KEY=${VAPID_PUBLIC_KEY}
+      - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY}
+      - VAPID_SUBJECT=${VAPID_SUBJECT}
+    volumes:
+      - push-data:/data
+
+volumes:
+  push-data:
