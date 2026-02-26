@@ -75,7 +75,7 @@ describe('ActivityHistory', () => {
     expect(wrapper.find('.text-info').exists()).toBe(true)
   })
 
-  it('has table headers Date, Time, User, Action', () => {
+  it('has table headers When, User, Action', () => {
     const wrapper = factory({
       history: [
         { id: 1, timestamp: '2026-02-25T12:00:00Z', user: 'test', action: 'Opened gate' },
@@ -83,6 +83,6 @@ describe('ActivityHistory', () => {
     })
     const headers = wrapper.findAll('th')
     const headerTexts = headers.map((h) => h.text())
-    expect(headerTexts).toEqual(['Date', 'Time', 'User', 'Action'])
+    expect(headerTexts).toEqual(['When', 'User', 'Action'])
   })
 })

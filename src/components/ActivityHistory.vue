@@ -6,20 +6,11 @@ defineProps({
   },
 })
 
-function formatDate(iso) {
+function formatDateTime(iso) {
   const d = new Date(iso)
-  return d.toLocaleDateString(undefined, {
-    month: 'short',
-    day: 'numeric',
-  })
-}
-
-function formatTime(iso) {
-  const d = new Date(iso)
-  return d.toLocaleTimeString(undefined, {
-    hour: '2-digit',
-    minute: '2-digit',
-  })
+  const date = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+  const time = d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
+  return { date, time }
 }
 </script>
 
@@ -36,19 +27,21 @@ function formatTime(iso) {
     </div>
 
     <div v-else class="glass-card overflow-hidden">
+      <div class="overflow-x-auto overscroll-x-contain" style="-webkit-overflow-scrolling: touch">
       <table class="w-full text-sm">
         <thead>
           <tr class="border-b border-white/[0.06] text-left">
-            <th class="px-4 py-3 text-xs font-medium uppercase tracking-wider text-base-content/30">Date</th>
-            <th class="px-4 py-3 text-xs font-medium uppercase tracking-wider text-base-content/30">Time</th>
+            <th class="px-4 py-3 text-xs font-medium uppercase tracking-wider text-base-content/30">When</th>
             <th class="px-4 py-3 text-xs font-medium uppercase tracking-wider text-base-content/30">User</th>
             <th class="px-4 py-3 text-xs font-medium uppercase tracking-wider text-base-content/30">Action</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-white/[0.04]">
           <tr v-for="entry in history" :key="entry.id" class="transition-colors hover:bg-white/[0.02]">
-            <td class="whitespace-nowrap px-4 py-3 text-base-content/50">{{ formatDate(entry.timestamp) }}</td>
-            <td class="whitespace-nowrap px-4 py-3 text-base-content/50">{{ formatTime(entry.timestamp) }}</td>
+            <td class="whitespace-nowrap px-4 py-3 text-base-content/50">
+              <div>{{ formatDateTime(entry.timestamp).date }}</div>
+              <div class="text-xs text-base-content/30">{{ formatDateTime(entry.timestamp).time }}</div>
+            </td>
             <td class="max-w-[140px] truncate px-4 py-3 text-base-content/70">{{ entry.user }}</td>
             <td class="px-4 py-3">
               <span
@@ -66,6 +59,7 @@ function formatTime(iso) {
           </tr>
         </tbody>
       </table>
+      </div>
     </div>
   </div>
 </template>
