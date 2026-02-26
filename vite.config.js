@@ -14,6 +14,10 @@ export default defineConfig({
       srcDir: 'src',
       filename: 'sw.js',
       registerType: 'autoUpdate',
+      devOptions: {
+        enabled: true,
+        type: 'module',
+      },
       injectManifest: {
         globPatterns: ['**/*.{js,css,html,svg,png,ico,webmanifest}'],
       },
@@ -62,6 +66,11 @@ export default defineConfig({
         target: process.env.VITE_HA_BASE_URL || 'http://192.168.0.201:8123',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/ha-api/, ''),
+      },
+      // Proxy /push/ to local push-server sidecar (for dev)
+      '/push': {
+        target: 'http://127.0.0.1:3001',
+        changeOrigin: true,
       },
     },
   },

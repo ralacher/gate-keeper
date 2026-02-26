@@ -18,7 +18,8 @@ if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
 webPush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY)
 
 // ── Subscription storage (JSON file, fine for 3 users) ───────
-const SUBS_FILE = '/data/push-subscriptions.json'
+const DATA_DIR = process.env.PUSH_DATA_DIR || '/data'
+const SUBS_FILE = `${DATA_DIR}/push-subscriptions.json`
 
 function loadSubscriptions() {
   if (!existsSync(SUBS_FILE)) return []
@@ -94,9 +95,10 @@ app.post('/push/send', async (req, res) => {
   }
 
   const payload = JSON.stringify({ title, body, icon: '/gate-icon-192.png', tag: 'gate-activity' })
-  const targets = subscriptions.filter((s) => s.user !== user)
+  const isDev = user === 'local-dev@example.com'
+  const targets = isDev ? [...subscriptions] : subscriptions.filter((s) => s.user !== user)
 
-  console.log(`[push] Sending to ${targets.length} subscriber(s) (from ${user})`)
+  console.log(`[push] Sending to ${targets.length} subscriber(s) (from ${user}${isDev ? ', dev-mode: include self' : ''})`)
 
   const results = await Promise.allSettled(
     targets.map((s) => webPush.sendNotification(s.subscription, payload)),

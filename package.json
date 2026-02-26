@@ -4,7 +4,9 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "concurrently -n vite,push -c blue,green \"npm:dev:vite\" \"npm:dev:push\"",
+    "dev:vite": "vite",
+    "dev:push": "node --env-file=.env push-server/server.js",
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",
@@ -17,6 +19,7 @@
     "@vitejs/plugin-vue": "^5.2.0",
     "@vue/test-utils": "^2.4.6",
     "autoprefixer": "^10.4.20",
+    "concurrently": "^9.2.1",
     "daisyui": "^4.12.0",
     "happy-dom": "^20.7.0",
     "postcss": "^8.4.49",

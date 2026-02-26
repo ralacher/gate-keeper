@@ -179,14 +179,24 @@ export function useGate() {
     if (permission === 'default') {
       permission = await Notification.requestPermission()
     }
-    if (permission !== 'granted') return
+    if (permission !== 'granted') {
+      if (permission === 'denied') {
+        error.value = 'Notification permission was denied — check your browser settings'
+      }
+      return
+    }
 
     try {
-      await subscribePush(userEmail.value)
+      const sub = await subscribePush(userEmail.value)
+      if (!sub) {
+        error.value = 'Push notifications are not supported in this browser'
+        return
+      }
       notificationsEnabled.value = true
       localStorage.setItem('gate-notifications', 'true')
     } catch (err) {
       console.error('Failed to subscribe to push:', err)
+      error.value = 'Failed to enable notifications — push server may be unavailable'
     }
   }
 

@@ -33,7 +33,11 @@ async function getVapidKey() {
 export async function subscribePush(userEmail) {
   if (!('serviceWorker' in navigator) || !('PushManager' in window)) return null
 
-  const registration = await navigator.serviceWorker.ready
+  // Wait for SW with a timeout so we don't hang if none is registered
+  const registration = await Promise.race([
+    navigator.serviceWorker.ready,
+    new Promise((_, reject) => setTimeout(() => reject(new Error('Service worker not ready — is the PWA enabled?')), 5000)),
+  ])
   const key = await getVapidKey()
 
   // Check for existing subscription first
