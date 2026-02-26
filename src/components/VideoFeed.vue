@@ -20,6 +20,27 @@ const cropStyle = computed(() =>
     : {},
 )
 
+// Point-of-interest rectangle overlay (from env)
+const poiLeft = import.meta.env.VITE_VIDEO_POI_LEFT || ''
+const poiTop = import.meta.env.VITE_VIDEO_POI_TOP || ''
+const poiWidth = import.meta.env.VITE_VIDEO_POI_WIDTH || ''
+const poiHeight = import.meta.env.VITE_VIDEO_POI_HEIGHT || ''
+const poiLabel = import.meta.env.VITE_VIDEO_POI_LABEL || ''
+const poiColor = import.meta.env.VITE_VIDEO_POI_COLOR || 'rgba(239,68,68,0.7)'
+const showPoi = !!(poiLeft && poiTop && poiWidth && poiHeight)
+
+const poiStyle = computed(() =>
+  showPoi
+    ? {
+        left: poiLeft,
+        top: poiTop,
+        width: poiWidth,
+        height: poiHeight,
+        borderColor: poiColor,
+      }
+    : {},
+)
+
 // Delay before auto-reconnect after a dropped connection (ms)
 const RECONNECT_DELAY_MS = 3000
 
@@ -191,7 +212,7 @@ onBeforeUnmount(() => {
     <!-- Video player (optionally CSS-cropped via VITE_VIDEO_CROP_* env vars) -->
     <div
       v-show="status === 'connected' || status === 'idle'"
-      class="aspect-video w-full overflow-hidden"
+      class="relative aspect-video w-full overflow-hidden"
     >
       <video
         ref="videoEl"
@@ -202,6 +223,20 @@ onBeforeUnmount(() => {
         muted
         aria-label="Gate camera feed"
       />
+
+      <!-- Point-of-interest rectangle overlay -->
+      <div
+        v-if="showPoi"
+        class="pointer-events-none absolute border-2 rounded-sm"
+        :style="poiStyle"
+        aria-hidden="true"
+      >
+        <span
+          v-if="poiLabel"
+          class="absolute bottom-1 right-1 whitespace-nowrap rounded px-1 py-0.5 text-[10px] font-semibold text-white drop-shadow-md"
+          :style="{ backgroundColor: poiColor }"
+        >{{ poiLabel }}</span>
+      </div>
     </div>
   </div>
 </template>
