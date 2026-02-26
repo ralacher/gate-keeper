@@ -28,16 +28,16 @@ function formatDateTime(iso) {
 
     <div v-else class="glass-card overflow-hidden">
       <div class="overflow-x-auto overscroll-x-contain" style="-webkit-overflow-scrolling: touch">
-      <table class="w-full text-sm">
+      <table class="w-full text-sm" aria-label="Gate activity history">
         <thead>
-          <tr class="border-b border-white/[0.06] text-left">
-            <th class="px-4 py-3 text-xs font-medium uppercase tracking-wider text-base-content/30">When</th>
-            <th class="px-4 py-3 text-xs font-medium uppercase tracking-wider text-base-content/30">User</th>
-            <th class="px-4 py-3 text-xs font-medium uppercase tracking-wider text-base-content/30">Action</th>
+          <tr class="border-b border-base-content/[0.06] text-left">
+            <th class="px-4 py-3 text-xs font-medium uppercase tracking-wider text-base-content/30" scope="col">When</th>
+            <th class="px-4 py-3 text-xs font-medium uppercase tracking-wider text-base-content/30" scope="col">User</th>
+            <th class="px-4 py-3 text-xs font-medium uppercase tracking-wider text-base-content/30" scope="col">Action</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-white/[0.04]">
-          <tr v-for="entry in history" :key="entry.id" class="transition-colors hover:bg-white/[0.02]">
+        <tbody class="divide-y divide-base-content/[0.04]">
+          <tr v-for="entry in history" :key="entry.id" class="transition-colors hover:bg-base-content/[0.02]">
             <td class="whitespace-nowrap px-4 py-3 text-base-content/50">
               <div>{{ formatDateTime(entry.timestamp).date }}</div>
               <div class="text-xs text-base-content/30">{{ formatDateTime(entry.timestamp).time }}</div>

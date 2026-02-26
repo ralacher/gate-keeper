@@ -8,11 +8,15 @@ const isMock = !go2rtcUrl || !go2rtcStream
 // Always proxy through /go2rtc (Vite dev proxy or nginx in production) to avoid CORS
 const go2rtcBase = '/go2rtc'
 
+// Delay before auto-reconnect after a dropped connection (ms)
+const RECONNECT_DELAY_MS = 3000
+
 const videoEl = ref(null)
 const status = ref('idle') // idle | connecting | connected | error
 const errorMsg = ref('')
 
 let pc = null
+let reconnectTimer = null
 
 async function connect() {
   if (isMock || !go2rtcUrl || !go2rtcStream) {
@@ -38,8 +42,7 @@ async function connect() {
       if (pc.iceConnectionState === 'connected') {
         status.value = 'connected'
       } else if (pc.iceConnectionState === 'failed' || pc.iceConnectionState === 'disconnected') {
-        status.value = 'error'
-        errorMsg.value = 'Stream connection lost'
+        scheduleReconnect()
       }
     }
 
@@ -91,7 +94,23 @@ async function connect() {
   }
 }
 
+/** Schedule an automatic reconnect after a dropped connection. */
+function scheduleReconnect() {
+  if (reconnectTimer) return // already scheduled
+  status.value = 'error'
+  errorMsg.value = 'Connection lost, reconnecting…'
+  reconnectTimer = setTimeout(() => {
+    reconnectTimer = null
+    disconnect()
+    connect()
+  }, RECONNECT_DELAY_MS)
+}
+
 function disconnect() {
+  if (reconnectTimer) {
+    clearTimeout(reconnectTimer)
+    reconnectTimer = null
+  }
   if (pc) {
     pc.close()
     pc = null
@@ -119,7 +138,7 @@ onBeforeUnmount(() => {
       class="flex aspect-video items-center justify-center bg-base-300/50 text-base-content/30"
     >
       <div class="text-center">
-        <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto mb-2 h-10 w-10 opacity-30" viewBox="0 0 20 20" fill="currentColor">
+        <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto mb-2 h-10 w-10 opacity-30" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
           <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6zm12.553 1.106A1 1 0 0014 8v4a1 1 0 001.553.832l3-2a1 1 0 000-1.664l-3-2z"/>
         </svg>
         <p class="text-sm font-medium">Camera Feed</p>
@@ -131,20 +150,28 @@ onBeforeUnmount(() => {
     <div
       v-else-if="status === 'connecting'"
       class="flex aspect-video items-center justify-center bg-base-300/50"
+      aria-busy="true"
+      aria-label="Connecting to video stream"
     >
-      <span class="loading loading-spinner loading-lg text-primary/50"></span>
+      <span class="loading loading-spinner loading-lg text-primary/50" aria-hidden="true"></span>
     </div>
 
-    <!-- Error state -->
+    <!-- Error / reconnecting state -->
     <div
       v-else-if="status === 'error'"
       class="flex aspect-video flex-col items-center justify-center gap-3 bg-base-300/50"
+      role="status"
+      :aria-label="errorMsg"
     >
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-error/60" viewBox="0 0 20 20" fill="currentColor">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-error/60" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
         <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
       </svg>
       <p class="text-sm text-error/70">{{ errorMsg }}</p>
-      <button class="rounded-lg border border-primary/20 bg-primary/10 px-4 py-1.5 text-xs font-medium text-primary transition-all hover:bg-primary/20" @click="connect">
+      <button
+        class="rounded-lg border border-primary/20 bg-primary/10 px-4 py-1.5 text-xs font-medium text-primary transition-all hover:bg-primary/20"
+        aria-label="Retry video connection"
+        @click="connect"
+      >
         Retry
       </button>
     </div>
@@ -157,6 +184,7 @@ onBeforeUnmount(() => {
       autoplay
       playsinline
       muted
+      aria-label="Gate camera feed"
     />
   </div>
 </template>

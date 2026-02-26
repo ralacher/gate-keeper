@@ -43,21 +43,22 @@ defineExpose({ open })
 
 <template>
   <dialog ref="modalEl" class="modal modal-bottom sm:modal-middle">
-    <div class="modal-box border border-white/[0.06] bg-base-200">
+    <div class="modal-box border border-base-content/[0.06] bg-base-200">
       <h3 class="text-lg font-bold">Expected Unlatch Time</h3>
       <p class="py-2 text-sm text-base-content/60">
         When do you expect to unlatch the gate? This will be shown to your neighbors for awareness.
       </p>
 
       <div class="form-control mt-2">
-        <label class="label">
+        <label class="label" for="unlatch-datetime">
           <span class="text-xs font-medium uppercase tracking-wider text-base-content/40">Expected unlatch at</span>
         </label>
         <input
+          id="unlatch-datetime"
           v-model="unlatchDate"
           type="datetime-local"
           :min="minTime"
-          class="input input-bordered w-full border-white/[0.08] bg-base-300/50 focus:border-primary/30"
+          class="input input-bordered w-full border-base-content/[0.08] bg-base-300/50 focus:border-primary/30"
         />
       </div>
 

@@ -221,6 +221,40 @@ describe('useGate', () => {
     wrapper.unmount()
   })
 
+  it('poll skips loadFromHA while an action is in progress', async () => {
+    haState.isEnabled.mockReturnValue(true)
+    haState.loadGateState.mockResolvedValue({
+      latched: true,
+      expectedUnlatch: null,
+      history: [],
+    })
+
+    const { result, wrapper } = mountComposable()
+    // Allow onMounted (initial loadFromHA) to complete
+    await vi.advanceTimersByTimeAsync(0)
+    await nextTick()
+
+    const initialCallCount = haState.loadGateState.mock.calls.length
+
+    // Simulate an active action in progress
+    result.activeAction.value = 'open'
+
+    // Advance time past POLL_INTERVAL_MS (15 s) — poll should be skipped
+    await vi.advanceTimersByTimeAsync(15_000)
+    await nextTick()
+
+    expect(haState.loadGateState.mock.calls.length).toBe(initialCallCount)
+
+    // Once action completes, next poll interval should call loadFromHA
+    result.activeAction.value = null
+    await vi.advanceTimersByTimeAsync(15_000)
+    await nextTick()
+
+    expect(haState.loadGateState.mock.calls.length).toBeGreaterThan(initialCallCount)
+
+    wrapper.unmount()
+  })
+
   it('countdown ticks down and clears activeAction', async () => {
     const { result, wrapper } = mountComposable()
     await nextTick()

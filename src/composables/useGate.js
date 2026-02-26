@@ -18,10 +18,13 @@ import {
   isPushSubscribed,
 } from '../services/pushService.js'
 
+// How often (ms) to poll HA for state changes from other users
+const POLL_INTERVAL_MS = 15_000
+
 /**
  * Composable that manages gate state, actions, and activity history.
  * State is persisted to Home Assistant helpers when configured,
- * and polled every 15 s so all neighbors stay in sync.
+ * and polled every POLL_INTERVAL_MS so all neighbors stay in sync.
  * Web Push notifications are sent via the push-server sidecar.
  */
 export function useGate() {
@@ -32,6 +35,7 @@ export function useGate() {
   const expectedUnlatch = ref(null) // { time: ISO, user: string } or null — display only
   const countdown = ref(0) // seconds remaining after gate opens
   const notificationsEnabled = ref(false) // web push opt-in
+  const isLoading = ref(false) // true during the initial HA state load
   let pollTimer = null
   let countdownTimer = null
 
@@ -65,8 +69,9 @@ export function useGate() {
     }, 1000)
   }
 
-  /** Hydrate refs from HA (or fall back to defaults). */
+  /** Hydrate refs from HA (or fall back to defaults). Skipped when a gate action is in progress. */
   async function loadFromHA() {
+    if (activeAction.value) return // avoid overwriting in-flight state
     const state = await loadGateState()
     if (state) {
       latched.value = state.latched
@@ -214,12 +219,14 @@ export function useGate() {
   }
 
   onMounted(async () => {
+    isLoading.value = true
     await loadFromHA()
+    isLoading.value = false
     loadNotificationPreference() // async, no need to await — runs in background
     fetchUserEmail()
-    // Poll every 15 s to sync state across neighbors
+    // Poll every POLL_INTERVAL_MS to sync state across neighbors
     if (haEnabled()) {
-      pollTimer = setInterval(loadFromHA, 15_000)
+      pollTimer = setInterval(loadFromHA, POLL_INTERVAL_MS)
     }
   })
 
@@ -243,6 +250,7 @@ export function useGate() {
     userEmail,
     expectedUnlatch,
     notificationsEnabled,
+    isLoading,
     handleOpen,
     handleOpenAndLatch,
     handleUnlatch,

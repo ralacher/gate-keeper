@@ -37,6 +37,24 @@ describe('LatchStatus', () => {
     expect(wrapper.emitted('toggle-latch')).toBeTruthy()
   })
 
+  it('status bar is a button element for accessibility', () => {
+    const wrapper = factory()
+    // The clickable status bar must be a <button> so it is keyboard-focusable
+    expect(wrapper.find('button.glass-card').exists()).toBe(true)
+  })
+
+  it('status button has a descriptive aria-label', () => {
+    const wrapper = factory({ latched: false })
+    const btn = wrapper.find('button.glass-card')
+    expect(btn.attributes('aria-label')).toContain('secured')
+  })
+
+  it('status button aria-label reflects latched state', () => {
+    const wrapper = factory({ latched: true })
+    const btn = wrapper.find('button.glass-card')
+    expect(btn.attributes('aria-label')).toContain('latched open')
+  })
+
   it('does not emit "toggle-latch" when cancelled', async () => {
     const wrapper = factory()
     await wrapper.find('.glass-card').trigger('click')
