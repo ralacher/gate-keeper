@@ -10,14 +10,16 @@
  * The activity history is stored as a custom sensor via the REST API
  * (sensor.gate_history) — its attributes hold the full JSON array.
  *
- * Requires a long-lived access token (VITE_HA_TOKEN).
- * All writes are fire-and-forget; failures are logged but never block the UI.
+ * The HA long-lived access token (HA_TOKEN) is injected as an Authorization
+ * header by the nginx reverse proxy (or the Vite dev proxy). It is never
+ * embedded in the client bundle.
  */
 
 const rawBaseUrl = import.meta.env.VITE_HA_BASE_URL || ''
-const token = import.meta.env.VITE_HA_TOKEN || ''
 
-// Always proxy through /ha-api (Vite dev proxy or nginx in production) to avoid CORS
+// Always proxy through /ha-api (Vite dev proxy or nginx in production) to avoid CORS.
+// The Authorization header is injected by the proxy (nginx or Vite dev server) and is
+// never embedded in the client bundle.
 const baseUrl = '/ha-api'
 
 const ENTITY = {
@@ -28,14 +30,13 @@ const ENTITY = {
 
 function headers() {
   return {
-    Authorization: `Bearer ${token}`,
     'Content-Type': 'application/json',
   }
 }
 
 /** Returns true when we have a real HA connection configured (independent of mock mode). */
 export function isEnabled() {
-  return !!rawBaseUrl && !!token
+  return !!rawBaseUrl
 }
 
 // ── Low-level helpers ────────────────────────────────────────────

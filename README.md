@@ -60,7 +60,9 @@ A table displays a chronological log of all gate operations:
 
 ## Configuration
 
-All Home Assistant connection parameters are provided via environment variables — nothing is hardcoded.
+All connection parameters are provided via environment variables — nothing is hardcoded.
+
+**Build-time variables** (compiled into the frontend bundle — safe to expose):
 
 | Variable | Description | Example |
 |---|---|---|
@@ -71,6 +73,22 @@ All Home Assistant connection parameters are provided via environment variables 
 | `VITE_GO2RTC_URL` | go2rtc instance URL (for video feed) | `http://192.168.1.50:1984` |
 | `VITE_GO2RTC_STREAM` | go2rtc stream name | `gate_camera` |
 | `VITE_MOCK` | Use simulated responses (`true`/`false`) | `true` |
+
+**Runtime variables** (server-side only — never exposed to the browser):
+
+| Variable | Description | Example |
+|---|---|---|
+| `HA_TOKEN` | Home Assistant long-lived access token | `eyJ0...` |
+| `HA_BASE_URL` | Home Assistant URL used by nginx proxy | `http://192.168.1.50:8123` |
+| `GO2RTC_URL` | go2rtc URL used by nginx proxy | `http://192.168.1.50:1984` |
+| `VAPID_PUBLIC_KEY` | VAPID public key for Web Push | `BEl6...` |
+| `VAPID_PRIVATE_KEY` | VAPID private key for Web Push | `abc...` |
+| `VAPID_SUBJECT` | Contact URI for push server | `mailto:gate@example.com` |
+
+> **Security note:** `HA_TOKEN` is intentionally not prefixed with `VITE_`. The Vite build
+> toolchain only embeds `VITE_*` variables in the browser bundle. `HA_TOKEN` is injected
+> solely by the nginx reverse proxy (or the Vite dev proxy in Node.js), so it is never
+> visible to any browser.
 
 ## Tech Stack
 
