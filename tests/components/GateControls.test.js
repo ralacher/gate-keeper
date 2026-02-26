@@ -9,8 +9,7 @@ describe('GateControls', () => {
         activeAction: null,
         latched: false,
         countdown: 0,
-        openAndLatchEnabled: true,
-        unlatchEnabled: true,
+        latchEnabled: true,
         ...props,
       },
     })
@@ -46,6 +45,16 @@ describe('GateControls', () => {
     expect(buttons[2].attributes('disabled')).toBeDefined()
   })
 
+  it('keeps Open enabled when latch feature is off even if latched', () => {
+    const wrapper = factory({ latched: true, latchEnabled: false })
+    const buttons = wrapper.findAll('button')
+    // Open should still be clickable
+    expect(buttons[0].attributes('disabled')).toBeUndefined()
+    // Latch and Unlatch stay disabled
+    expect(buttons[1].attributes('disabled')).toBeDefined()
+    expect(buttons[2].attributes('disabled')).toBeDefined()
+  })
+
   it('disables all buttons when an action is active', () => {
     const wrapper = factory({ activeAction: 'open' })
     const buttons = wrapper.findAll('button')
@@ -68,8 +77,8 @@ describe('GateControls', () => {
     expect(wrapper.emitted('open-and-latch')).toBeTruthy()
   })
 
-  it('disables Latch button when open-and-latch feature is off', async () => {
-    const wrapper = factory({ openAndLatchEnabled: false })
+  it('disables Latch button when latch feature is off', async () => {
+    const wrapper = factory({ latchEnabled: false })
     const buttons = wrapper.findAll('button')
     expect(buttons[1].attributes('disabled')).toBeDefined()
     await buttons[1].trigger('click')
@@ -83,8 +92,8 @@ describe('GateControls', () => {
     expect(wrapper.emitted('unlatch')).toBeTruthy()
   })
 
-  it('disables Unlatch button when unlatch feature is off', async () => {
-    const wrapper = factory({ latched: true, unlatchEnabled: false })
+  it('disables Unlatch button when latch feature is off', async () => {
+    const wrapper = factory({ latched: true, latchEnabled: false })
     const buttons = wrapper.findAll('button')
     expect(buttons[2].attributes('disabled')).toBeDefined()
     await buttons[2].trigger('click')

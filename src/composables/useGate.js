@@ -19,8 +19,7 @@ import {
 } from '../services/pushService.js'
 import {
   featureFlags,
-  isOpenAndLatchEnabled,
-  isUnlatchEnabled,
+  isLatchEnabled,
 } from '../config/featureFlags.js'
 
 // How often (ms) to poll HA for state changes from other users
@@ -101,8 +100,8 @@ export function useGate() {
   }
 
   async function handleOpenAndLatch(unlatchAt) {
-    if (!isOpenAndLatchEnabled()) {
-      error.value = 'Open & latch is disabled in configuration'
+    if (!isLatchEnabled()) {
+      error.value = 'Latch functionality is disabled in configuration'
       return
     }
 
@@ -128,8 +127,8 @@ export function useGate() {
   }
 
   async function handleUnlatch() {
-    if (!isUnlatchEnabled()) {
-      error.value = 'Unlatch is disabled in configuration'
+    if (!isLatchEnabled()) {
+      error.value = 'Latch functionality is disabled in configuration'
       return
     }
 

@@ -33,11 +33,11 @@ const {
 const { resolvedTheme } = useTheme()
 
 const manualLatchUiEnabled = computed(
-  () => featureFlags.openAndLatchEnabled || featureFlags.unlatchEnabled,
+  () => featureFlags.latchEnabled,
 )
 
 function onOpenAndLatchClick() {
-  if (!featureFlags.openAndLatchEnabled) return
+  if (!featureFlags.latchEnabled) return
   schedulerModal.value?.open()
 }
 
@@ -173,8 +173,7 @@ function onScheduleConfirm(unlatchAt) {
             :active-action="activeAction"
             :latched="latched"
             :countdown="countdown"
-            :open-and-latch-enabled="featureFlags.openAndLatchEnabled"
-            :unlatch-enabled="featureFlags.unlatchEnabled"
+            :latch-enabled="featureFlags.latchEnabled"
             @open="handleOpen"
             @open-and-latch="onOpenAndLatchClick"
             @unlatch="handleUnlatch"

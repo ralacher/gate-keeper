@@ -33,12 +33,9 @@ vi.mock('../../src/services/pushService.js', () => ({
 
 vi.mock('../../src/config/featureFlags.js', () => ({
   featureFlags: {
-    openAndLatchEnabled: true,
-    unlatchEnabled: true,
+    latchEnabled: true,
   },
-  isOpenAndLatchEnabled: vi.fn(() => true),
-  isUnlatchEnabled: vi.fn(() => true),
-  isAnyLatchActionEnabled: vi.fn(() => true),
+  isLatchEnabled: vi.fn(() => true),
 }))
 
 // Mock fetch for /api/me
@@ -72,8 +69,7 @@ describe('useGate', () => {
   beforeEach(() => {
     vi.useFakeTimers()
     vi.clearAllMocks()
-    featureFlags.isOpenAndLatchEnabled.mockReturnValue(true)
-    featureFlags.isUnlatchEnabled.mockReturnValue(true)
+    featureFlags.isLatchEnabled.mockReturnValue(true)
   })
 
   afterEach(() => {
@@ -181,7 +177,7 @@ describe('useGate', () => {
   })
 
   it('handleOpenAndLatch returns early when feature flag is disabled', async () => {
-    featureFlags.isOpenAndLatchEnabled.mockReturnValue(false)
+    featureFlags.isLatchEnabled.mockReturnValue(false)
 
     const { result, wrapper } = mountComposable()
     await nextTick()
@@ -190,7 +186,7 @@ describe('useGate', () => {
     await nextTick()
 
     expect(gateApi.openAndLatchGate).not.toHaveBeenCalled()
-    expect(result.error.value).toBe('Open & latch is disabled in configuration')
+    expect(result.error.value).toBe('Latch functionality is disabled in configuration')
 
     wrapper.unmount()
   })
@@ -217,7 +213,7 @@ describe('useGate', () => {
   })
 
   it('handleUnlatch returns early when feature flag is disabled', async () => {
-    featureFlags.isUnlatchEnabled.mockReturnValue(false)
+    featureFlags.isLatchEnabled.mockReturnValue(false)
 
     const { result, wrapper } = mountComposable()
     await nextTick()
@@ -226,7 +222,7 @@ describe('useGate', () => {
     await nextTick()
 
     expect(gateApi.unlatchGate).not.toHaveBeenCalled()
-    expect(result.error.value).toBe('Unlatch is disabled in configuration')
+    expect(result.error.value).toBe('Latch functionality is disabled in configuration')
 
     wrapper.unmount()
   })

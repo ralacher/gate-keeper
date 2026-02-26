@@ -176,15 +176,19 @@ onBeforeUnmount(() => {
       </button>
     </div>
 
-    <!-- Video player -->
-    <video
+    <!-- Video player — CSS crop to top-left quadrant -->
+    <div
       v-show="status === 'connected' || status === 'idle'"
-      ref="videoEl"
-      class="aspect-video w-full bg-black"
-      autoplay
-      playsinline
-      muted
-      aria-label="Gate camera feed"
-    />
+      class="aspect-video w-full overflow-hidden"
+    >
+      <video
+        ref="videoEl"
+        class="h-[200%] w-[200%] origin-top-left bg-black"
+        autoplay
+        playsinline
+        muted
+        aria-label="Gate camera feed"
+      />
+    </div>
   </div>
 </template>

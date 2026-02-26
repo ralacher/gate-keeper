@@ -48,7 +48,7 @@ describe('LatchStatus', () => {
     expect(wrapper.find('button.glass-card').exists()).toBe(false)
     const status = wrapper.find('[role="status"]')
     expect(status.exists()).toBe(true)
-    expect(status.text()).toContain('Secured')
+    expect(status.text()).toContain('Latch Status: Disabled')
   })
 
   it('status button has a descriptive aria-label', () => {

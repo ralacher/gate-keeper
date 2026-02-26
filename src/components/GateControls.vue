@@ -5,8 +5,7 @@ const props = defineProps({
   activeAction: String,
   latched: Boolean,
   countdown: { type: Number, default: 0 },
-  openAndLatchEnabled: { type: Boolean, default: true },
-  unlatchEnabled: { type: Boolean, default: true },
+  latchEnabled: { type: Boolean, default: true },
 })
 
 const emit = defineEmits(['open', 'open-and-latch', 'unlatch'])
@@ -17,13 +16,13 @@ function onOpen() {
 }
 
 function onOpenAndLatch() {
-  if (!props.openAndLatchEnabled) return
+  if (!props.latchEnabled) return
   haptic()
   emit('open-and-latch')
 }
 
 function onUnlatch() {
-  if (!props.unlatchEnabled) return
+  if (!props.latchEnabled) return
   haptic()
   emit('unlatch')
 }
@@ -34,7 +33,7 @@ function onUnlatch() {
     <!-- Open -->
     <button
       class="group relative flex h-[4.5rem] flex-col items-center justify-center gap-1.5 rounded-xl border border-primary/20 bg-primary/[0.08] text-primary transition-all duration-200 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-30 glow-primary"
-      :disabled="activeAction || latched"
+      :disabled="activeAction || (latchEnabled && latched)"
       :aria-label="activeAction === 'open' ? (countdown > 0 ? 'Gate is open' : 'Opening gate…') : 'Open gate'"
       :aria-busy="activeAction === 'open'"
       @click="onOpen"
@@ -50,8 +49,8 @@ function onUnlatch() {
     <!-- Open & Latch -->
     <button
       class="group relative flex h-[4.5rem] flex-col items-center justify-center gap-1.5 rounded-xl border border-warning/20 bg-warning/[0.08] text-warning transition-all duration-200 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-30 glow-warning"
-      :disabled="!openAndLatchEnabled || activeAction || latched"
-      :aria-label="!openAndLatchEnabled ? 'Open and latch gate is disabled in configuration' : activeAction === 'open-and-latch' ? (countdown > 0 ? 'Gate is latched open' : 'Opening and latching gate…') : 'Open and latch gate'"
+      :disabled="!latchEnabled || activeAction || latched"
+      :aria-label="!latchEnabled ? 'Open and latch gate is disabled in configuration' : activeAction === 'open-and-latch' ? (countdown > 0 ? 'Gate is latched open' : 'Opening and latching gate…') : 'Open and latch gate'"
       :aria-busy="activeAction === 'open-and-latch'"
       @click="onOpenAndLatch"
     >
@@ -60,14 +59,14 @@ function onUnlatch() {
       <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
         <path d="M10 2a5 5 0 00-5 5v2a2 2 0 00-2 2v5a2 2 0 002 2h10a2 2 0 002-2v-5a2 2 0 00-2-2H7V7a3 3 0 015.905-.75 1 1 0 001.937-.5A5.002 5.002 0 0010 2z"/>
       </svg>
-      <span class="text-xs font-semibold" aria-hidden="true">{{ !openAndLatchEnabled ? 'Disabled' : activeAction === 'open-and-latch' ? (countdown > 0 ? 'Gate open' : 'Opening…') : 'Latch' }}</span>
+      <span class="text-xs font-semibold" aria-hidden="true">{{ !latchEnabled ? 'Disabled' : activeAction === 'open-and-latch' ? (countdown > 0 ? 'Gate open' : 'Opening…') : 'Latch' }}</span>
     </button>
 
     <!-- Unlatch -->
     <button
       class="group relative flex h-[4.5rem] flex-col items-center justify-center gap-1.5 rounded-xl border border-accent/20 bg-accent/[0.08] text-accent transition-all duration-200 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-30 glow-accent"
-      :disabled="!unlatchEnabled || activeAction || !latched"
-      :aria-label="!unlatchEnabled ? 'Unlatch gate is disabled in configuration' : activeAction === 'unlatch' ? 'Unlatching gate…' : 'Unlatch gate'"
+      :disabled="!latchEnabled || activeAction || !latched"
+      :aria-label="!latchEnabled ? 'Unlatch gate is disabled in configuration' : activeAction === 'unlatch' ? 'Unlatching gate…' : 'Unlatch gate'"
       :aria-busy="activeAction === 'unlatch'"
       @click="onUnlatch"
     >
@@ -75,7 +74,7 @@ function onUnlatch() {
       <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
         <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/>
       </svg>
-      <span class="text-xs font-semibold" aria-hidden="true">{{ !unlatchEnabled ? 'Disabled' : activeAction === 'unlatch' ? 'Unlatching…' : 'Unlatch' }}</span>
+      <span class="text-xs font-semibold" aria-hidden="true">{{ !latchEnabled ? 'Disabled' : activeAction === 'unlatch' ? 'Unlatching…' : 'Unlatch' }}</span>
     </button>
   </div>
 </template>

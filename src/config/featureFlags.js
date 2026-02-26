@@ -14,29 +14,15 @@ function parseBooleanFlag(value, defaultValue = true) {
   return defaultValue
 }
 
-const openAndLatchEnabled = parseBooleanFlag(
-  import.meta.env.VITE_FEATURE_OPEN_AND_LATCH_ENABLED,
-  true,
-)
-
-const unlatchEnabled = parseBooleanFlag(
-  import.meta.env.VITE_FEATURE_UNLATCH_ENABLED,
+const latchEnabled = parseBooleanFlag(
+  import.meta.env.VITE_FEATURE_LATCH_ENABLED,
   true,
 )
 
 export const featureFlags = {
-  openAndLatchEnabled,
-  unlatchEnabled,
+  latchEnabled,
 }
 
-export function isOpenAndLatchEnabled() {
-  return featureFlags.openAndLatchEnabled
-}
-
-export function isUnlatchEnabled() {
-  return featureFlags.unlatchEnabled
-}
-
-export function isAnyLatchActionEnabled() {
-  return featureFlags.openAndLatchEnabled || featureFlags.unlatchEnabled
+export function isLatchEnabled() {
+  return featureFlags.latchEnabled
 }

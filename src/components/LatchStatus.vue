@@ -75,25 +75,21 @@ function formatExpectedTime(iso) {
 
     <div
       v-else
-      class="glass-card flex w-full items-center gap-3 px-4 py-3 text-left"
+      class="glass-card flex w-full items-center gap-3 px-4 py-3 text-left pointer-events-none opacity-30"
       :class="latched
         ? 'border-warning/20 bg-warning/[0.06]'
         : 'border-accent/20 bg-accent/[0.06]'"
-      aria-label="Gate latch status"
+      aria-label="Gate latch status (disabled)"
       role="status"
     >
       <div
-        class="h-2.5 w-2.5 shrink-0 rounded-full"
-        :class="latched ? 'bg-warning shadow-[0_0_8px_rgba(245,158,11,0.5)]' : 'bg-accent shadow-[0_0_8px_rgba(16,185,129,0.5)]'"
+        class="h-2.5 w-2.5 shrink-0 rounded-full bg-base-content/20"
         aria-hidden="true"
       ></div>
 
       <div class="flex items-center gap-2 min-w-0">
-        <span class="text-sm font-semibold whitespace-nowrap" :class="latched ? 'text-warning' : 'text-accent'">
-          {{ latched ? 'Latched Open' : 'Secured' }}
-        </span>
-        <span class="text-xs text-base-content/40 whitespace-nowrap">
-          {{ latched ? 'Gate is held open' : 'Gate will close normally' }}
+        <span class="text-sm font-semibold whitespace-nowrap text-base-content/50">
+          Latch Status: Disabled
         </span>
       </div>
     </div>

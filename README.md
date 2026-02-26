@@ -73,8 +73,7 @@ All connection parameters are provided via environment variables — nothing is 
 | `VITE_GO2RTC_URL` | go2rtc instance URL (for video feed) | `http://192.168.1.50:1984` |
 | `VITE_GO2RTC_STREAM` | go2rtc stream name | `gate_camera` |
 | `VITE_MOCK` | Use simulated responses (`true`/`false`) | `true` |
-| `VITE_FEATURE_OPEN_AND_LATCH_ENABLED` | Enable/disable the Open & Latch control and action | `true` |
-| `VITE_FEATURE_UNLATCH_ENABLED` | Enable/disable the Unlatch control and action | `true` |
+| `VITE_FEATURE_LATCH_ENABLED` | Enable/disable all latch controls (Open & Latch, Unlatch, latch status toggle) | `true` |
 
 **Runtime variables** (server-side only — never exposed to the browser):
 
