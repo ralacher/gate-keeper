@@ -62,7 +62,7 @@ export default defineConfig(({ mode }) => {
     proxy: {
       // Proxy /go2rtc/ requests to the real go2rtc instance (avoids CORS)
       '/go2rtc': {
-        target: env.VITE_GO2RTC_URL || 'http://192.168.0.201:1984',
+        target: env.GO2RTC_URL || 'http://192.168.0.201:1984',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/go2rtc/, ''),
       },
