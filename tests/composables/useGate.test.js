@@ -23,6 +23,14 @@ vi.mock('../../src/services/haState.js', () => ({
   saveHistory: vi.fn(),
 }))
 
+// Mock pushService
+vi.mock('../../src/services/pushService.js', () => ({
+  subscribePush: vi.fn(() => Promise.resolve({})),
+  unsubscribePush: vi.fn(() => Promise.resolve()),
+  sendPushNotification: vi.fn(() => Promise.resolve()),
+  isPushSubscribed: vi.fn(() => Promise.resolve(false)),
+}))
+
 // Mock fetch for /api/me
 global.fetch = vi.fn(() =>
   Promise.resolve({ ok: false }),
@@ -31,6 +39,7 @@ global.fetch = vi.fn(() =>
 import { useGate } from '../../src/composables/useGate.js'
 import * as gateApi from '../../src/services/gateApi.js'
 import * as haState from '../../src/services/haState.js'
+import * as pushService from '../../src/services/pushService.js'
 
 // Helper: mount useGate inside a real component to get Vue lifecycle
 function mountComposable() {
@@ -231,5 +240,142 @@ describe('useGate', () => {
     expect(result.countdown.value).toBe(0)
 
     wrapper.unmount()
+  })
+
+  // --- Web Push notification tests ---
+
+  describe('notifications', () => {
+    beforeEach(() => {
+      global.Notification = vi.fn()
+      global.Notification.permission = 'default'
+      global.Notification.requestPermission = vi.fn(() => Promise.resolve('granted'))
+      localStorage.clear()
+    })
+
+    afterEach(() => {
+      delete global.Notification
+    })
+
+    it('toggleNotifications subscribes to push when permission granted', async () => {
+      global.Notification.permission = 'default'
+      global.Notification.requestPermission = vi.fn(() => Promise.resolve('granted'))
+
+      const { result, wrapper } = mountComposable()
+      await nextTick()
+
+      expect(result.notificationsEnabled.value).toBe(false)
+
+      await result.toggleNotifications()
+      expect(global.Notification.requestPermission).toHaveBeenCalled()
+      expect(pushService.subscribePush).toHaveBeenCalledWith('local-dev@example.com')
+      expect(result.notificationsEnabled.value).toBe(true)
+      expect(localStorage.getItem('gate-notifications')).toBe('true')
+
+      wrapper.unmount()
+    })
+
+    it('toggleNotifications unsubscribes when already enabled', async () => {
+      localStorage.setItem('gate-notifications', 'true')
+      pushService.isPushSubscribed.mockResolvedValueOnce(true)
+
+      const { result, wrapper } = mountComposable()
+      await vi.advanceTimersByTimeAsync(0)
+      await nextTick()
+
+      expect(result.notificationsEnabled.value).toBe(true)
+
+      await result.toggleNotifications()
+      expect(pushService.unsubscribePush).toHaveBeenCalled()
+      expect(result.notificationsEnabled.value).toBe(false)
+      expect(localStorage.getItem('gate-notifications')).toBe('false')
+
+      wrapper.unmount()
+    })
+
+    it('toggleNotifications stays off when permission is denied', async () => {
+      global.Notification.permission = 'default'
+      global.Notification.requestPermission = vi.fn(() => Promise.resolve('denied'))
+
+      const { result, wrapper } = mountComposable()
+      await nextTick()
+
+      await result.toggleNotifications()
+      expect(result.notificationsEnabled.value).toBe(false)
+      expect(pushService.subscribePush).not.toHaveBeenCalled()
+
+      wrapper.unmount()
+    })
+
+    it('loadNotificationPreference restores true when push is subscribed', async () => {
+      localStorage.setItem('gate-notifications', 'true')
+      pushService.isPushSubscribed.mockResolvedValueOnce(true)
+
+      const { result, wrapper } = mountComposable()
+      await vi.advanceTimersByTimeAsync(0)
+      await nextTick()
+
+      expect(result.notificationsEnabled.value).toBe(true)
+
+      wrapper.unmount()
+    })
+
+    it('loadNotificationPreference resets when push subscription is gone', async () => {
+      localStorage.setItem('gate-notifications', 'true')
+      pushService.isPushSubscribed.mockResolvedValueOnce(false)
+
+      const { result, wrapper } = mountComposable()
+      await vi.advanceTimersByTimeAsync(0)
+      await nextTick()
+
+      expect(result.notificationsEnabled.value).toBe(false)
+      expect(localStorage.getItem('gate-notifications')).toBe('false')
+
+      wrapper.unmount()
+    })
+
+    it('sends push notification on gate action', async () => {
+      const { result, wrapper } = mountComposable()
+      await nextTick()
+
+      await result.handleOpen()
+      await nextTick()
+
+      expect(pushService.sendPushNotification).toHaveBeenCalledWith(
+        'local-dev@example.com',
+        'Opened gate',
+      )
+
+      wrapper.unmount()
+    })
+
+    it('sends push notification on latch action', async () => {
+      const { result, wrapper } = mountComposable()
+      await nextTick()
+
+      await result.handleOpenAndLatch(null)
+      await nextTick()
+
+      expect(pushService.sendPushNotification).toHaveBeenCalledWith(
+        'local-dev@example.com',
+        'Opened & latched gate',
+      )
+
+      wrapper.unmount()
+    })
+
+    it('sends push notification on unlatch action', async () => {
+      const { result, wrapper } = mountComposable()
+      await nextTick()
+
+      await result.handleUnlatch()
+      await nextTick()
+
+      expect(pushService.sendPushNotification).toHaveBeenCalledWith(
+        'local-dev@example.com',
+        'Unlatched gate',
+      )
+
+      wrapper.unmount()
+    })
   })
 })

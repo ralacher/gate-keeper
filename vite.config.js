@@ -10,7 +10,13 @@ export default defineConfig({
   plugins: [
     vue(),
     VitePWA({
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.js',
       registerType: 'autoUpdate',
+      injectManifest: {
+        globPatterns: ['**/*.{js,css,html,svg,png,ico,webmanifest}'],
+      },
       includeAssets: ['gate-icon.svg', 'gate-icon-192.png', 'gate-icon-512.png'],
       manifest: {
         name: 'Gate Control',

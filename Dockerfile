@@ -25,22 +25,41 @@ RUN --mount=type=secret,id=VITE_HA_BASE_URL \
     export VITE_MOCK=false && \
     npm run build
 
-# ── Stage 2: Serve ────────────────────────────────────────────
-FROM nginx:alpine
+# ── Stage 2: Install push-server dependencies ────────────────
+FROM node:22-alpine AS push-deps
 
-# Remove default site
-RUN rm /etc/nginx/conf.d/default.conf
+WORKDIR /push-server
+COPY push-server/package.json push-server/package-lock.json* ./
+RUN npm install --omit=dev
 
-# Copy our nginx config template (NOT in /etc/nginx/templates/ — we handle envsubst ourselves)
+# ── Stage 3: Serve (nginx + push-server) ─────────────────────
+FROM node:22-alpine
+
+# Install nginx
+RUN apk add --no-cache nginx gettext
+
+# Remove default nginx config
+RUN rm -f /etc/nginx/http.d/default.conf
+
+# Copy nginx config template
 COPY nginx.conf /etc/nginx/default.conf.template
 
-# Copy custom entrypoint that only substitutes HA_BASE_URL and GO2RTC_URL
+# Copy custom entrypoint
 COPY docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
 
-# Copy built app
+# Copy built SPA
 COPY --from=build /app/dist /usr/share/nginx/html
+
+# Copy push server
+COPY push-server/server.js /push-server/server.js
+COPY --from=push-deps /push-server/node_modules /push-server/node_modules
+COPY push-server/package.json /push-server/package.json
+
+# Create data directory for push subscriptions
+RUN mkdir -p /data
 
 EXPOSE 80
 
+# VAPID keys and HA/go2rtc URLs are provided as runtime env vars
 ENTRYPOINT ["/docker-entrypoint.sh"]
