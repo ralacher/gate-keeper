@@ -61,11 +61,16 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/go2rtc/, ''),
       },
-      // Proxy /ha-api/ to Home Assistant REST API (avoids CORS)
+      // Proxy /ha-api/ to Home Assistant REST API (avoids CORS).
+      // The HA_TOKEN env var is read by the Vite dev server (Node.js) and
+      // injected here — it is never exposed to the browser.
       '/ha-api': {
         target: process.env.VITE_HA_BASE_URL || 'http://192.168.0.201:8123',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/ha-api/, ''),
+        headers: {
+          Authorization: `Bearer ${process.env.HA_TOKEN || ''}`,
+        },
       },
       // Proxy /push/ to local push-server sidecar (for dev)
       '/push': {

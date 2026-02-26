@@ -74,6 +74,15 @@ describe('LatchStatus', () => {
     expect(wrapper.text()).toContain('unknown')
   })
 
+  it('emits "clear-expected" when dismiss button is clicked', async () => {
+    const wrapper = factory({
+      latched: true,
+      expectedUnlatch: { time: '2026-03-01T10:00:00Z', user: 'bob@example.com' },
+    })
+    await wrapper.find('button[title="Dismiss"]').trigger('click')
+    expect(wrapper.emitted('clear-expected')).toBeTruthy()
+  })
+
   it('does not show expected unlatch when null', () => {
     const wrapper = factory({ latched: true, expectedUnlatch: null })
     expect(wrapper.text()).not.toContain('Expected unlatch')

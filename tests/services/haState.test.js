@@ -21,7 +21,7 @@ describe('haState', () => {
   })
 
   describe('isEnabled', () => {
-    it('returns true when both base URL and token are set', () => {
+    it('returns true when base URL is set', () => {
       expect(haState.isEnabled()).toBe(true)
     })
 
@@ -33,12 +33,12 @@ describe('haState', () => {
       expect(mod.isEnabled()).toBe(false)
     })
 
-    it('returns false when token is missing', async () => {
+    it('returns true when base URL is set regardless of token (token is server-side only)', async () => {
       vi.resetModules()
       vi.stubEnv('VITE_HA_BASE_URL', mockBaseUrl)
       vi.stubEnv('VITE_HA_TOKEN', '')
       const mod = await import('../../src/services/haState.js')
-      expect(mod.isEnabled()).toBe(false)
+      expect(mod.isEnabled()).toBe(true)
     })
   })
 
