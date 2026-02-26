@@ -35,6 +35,7 @@ export function useGate() {
   const expectedUnlatch = ref(null) // { time: ISO, user: string } or null — display only
   const countdown = ref(0) // seconds remaining after gate opens
   const notificationsEnabled = ref(false) // web push opt-in
+  const isLoading = ref(false) // true during the initial HA state load
   let pollTimer = null
   let countdownTimer = null
 
@@ -218,7 +219,9 @@ export function useGate() {
   }
 
   onMounted(async () => {
+    isLoading.value = true
     await loadFromHA()
+    isLoading.value = false
     loadNotificationPreference() // async, no need to await — runs in background
     fetchUserEmail()
     // Poll every POLL_INTERVAL_MS to sync state across neighbors
@@ -247,6 +250,7 @@ export function useGate() {
     userEmail,
     expectedUnlatch,
     notificationsEnabled,
+    isLoading,
     handleOpen,
     handleOpenAndLatch,
     handleUnlatch,

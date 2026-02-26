@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from 'vue'
+import { haptic } from '../utils/haptic.js'
 
 const props = defineProps({
   latched: Boolean,
@@ -11,6 +12,7 @@ const emit = defineEmits(['toggle-latch', 'clear-expected'])
 const showConfirm = ref(false)
 
 function onAlertClick() {
+  haptic()
   showConfirm.value = true
 }
 
@@ -38,19 +40,21 @@ function formatExpectedTime(iso) {
 <template>
   <div class="flex flex-col items-center gap-3 w-full">
 
-    <!-- Latch status alert -->
-    <div
-      class="glass-card flex w-full cursor-pointer items-center gap-3 px-4 py-3 transition-all duration-200 hover:opacity-90 active:scale-[0.98]"
+    <!-- Latch status — interactive button so keyboard/screen-reader users can activate it -->
+    <button
+      type="button"
+      class="glass-card flex w-full cursor-pointer items-center gap-3 px-4 py-3 transition-all duration-200 hover:opacity-90 active:scale-[0.98] text-left"
       :class="latched
         ? 'border-warning/20 bg-warning/[0.06]'
         : 'border-accent/20 bg-accent/[0.06]'"
-      title="Tap to correct latch state"
+      :aria-label="`Gate is ${latched ? 'latched open' : 'secured'}. Tap to manually correct latch state.`"
       @click="onAlertClick"
     >
       <!-- Status dot -->
       <div
         class="h-2.5 w-2.5 shrink-0 rounded-full"
         :class="latched ? 'bg-warning shadow-[0_0_8px_rgba(245,158,11,0.5)]' : 'bg-accent shadow-[0_0_8px_rgba(16,185,129,0.5)]'"
+        aria-hidden="true"
       ></div>
 
       <div class="flex items-center gap-2 min-w-0">
@@ -62,15 +66,15 @@ function formatExpectedTime(iso) {
         </span>
       </div>
 
-      <svg xmlns="http://www.w3.org/2000/svg" class="ml-auto h-3.5 w-3.5 shrink-0 text-base-content/20" viewBox="0 0 20 20" fill="currentColor">
+      <svg xmlns="http://www.w3.org/2000/svg" class="ml-auto h-3.5 w-3.5 shrink-0 text-base-content/20" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
         <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
       </svg>
-    </div>
+    </button>
 
     <!-- Confirmation modal -->
-    <dialog class="modal" :class="{ 'modal-open': showConfirm }">
-      <div class="modal-box border border-white/[0.06] bg-base-200">
-        <h3 class="text-lg font-bold">Change Latch Status</h3>
+    <dialog class="modal" :class="{ 'modal-open': showConfirm }" aria-labelledby="latch-modal-title">
+      <div class="modal-box border border-base-content/[0.06] bg-base-200">
+        <h3 id="latch-modal-title" class="text-lg font-bold">Change Latch Status</h3>
         <p class="py-4 text-base-content/70">
           This will change the status from
           <strong class="text-base-content">{{ latched ? 'Latched Open' : 'Secured' }}</strong> to
@@ -93,16 +97,17 @@ function formatExpectedTime(iso) {
       v-if="latched && expectedUnlatch"
       class="glass-card flex w-full items-center gap-2.5 px-4 py-2.5 text-sm"
     >
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-base-content/40" viewBox="0 0 20 20" fill="currentColor">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-base-content/40" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.828a1 1 0 101.415-1.414L11 9.586V6z" clip-rule="evenodd"/>
       </svg>
       <span class="text-base-content/60">Expected unlatch at <strong class="text-base-content/80">{{ formatExpectedTime(expectedUnlatch.time) }}</strong> by {{ expectedUnlatch.user || 'unknown' }}</span>
       <button
         class="ml-auto h-5 w-5 shrink-0 rounded text-base-content/30 transition-colors hover:text-base-content/70"
         title="Dismiss"
+        aria-label="Dismiss expected unlatch time"
         @click="emit('clear-expected')"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
           <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
         </svg>
       </button>

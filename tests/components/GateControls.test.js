@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import GateControls from '../../src/components/GateControls.vue'
 
@@ -92,5 +92,28 @@ describe('GateControls', () => {
   it('shows "Unlatching…" during unlatch action', () => {
     const wrapper = factory({ activeAction: 'unlatch', latched: true })
     expect(wrapper.text()).toContain('Unlatching…')
+  })
+
+  it('buttons have descriptive aria-labels', () => {
+    const wrapper = factory()
+    const buttons = wrapper.findAll('button')
+    expect(buttons[0].attributes('aria-label')).toContain('Open gate')
+    expect(buttons[1].attributes('aria-label')).toContain('Open and latch')
+    expect(buttons[2].attributes('aria-label')).toContain('Unlatch')
+  })
+
+  it('active button has aria-busy="true"', () => {
+    const wrapper = factory({ activeAction: 'open', countdown: 0 })
+    const buttons = wrapper.findAll('button')
+    expect(buttons[0].attributes('aria-busy')).toBe('true')
+  })
+
+  it('calls navigator.vibrate when Open is clicked', async () => {
+    const vibrate = vi.fn()
+    Object.defineProperty(navigator, 'vibrate', { value: vibrate, writable: true, configurable: true })
+
+    const wrapper = factory()
+    await wrapper.findAll('button')[0].trigger('click')
+    expect(vibrate).toHaveBeenCalledWith(10)
   })
 })
