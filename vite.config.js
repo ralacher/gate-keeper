@@ -14,6 +14,7 @@ export default defineConfig({
       srcDir: 'src',
       filename: 'sw.js',
       registerType: 'autoUpdate',
+      injectRegister: false, // we add <link rel="manifest"> manually with crossorigin="use-credentials"
       devOptions: {
         enabled: true,
         type: 'module',
