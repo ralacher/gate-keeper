@@ -57,10 +57,19 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           secrets: |
+            VITE_FEATURE_GATE_DETECTION_ENABLED=${{ secrets.VITE_FEATURE_GATE_DETECTION_ENABLED }}
+            VITE_FEATURE_LATCH_ENABLED=${{ secrets.VITE_FEATURE_LATCH_ENABLED }}
+            VITE_GATE_DETECT_MODE=${{ secrets.VITE_GATE_DETECT_MODE }}
+            VITE_GATE_DETECT_SAMPLE_X=${{ secrets.VITE_GATE_DETECT_SAMPLE_X }}
+            VITE_GATE_DETECT_SAMPLE_Y=${{ secrets.VITE_GATE_DETECT_SAMPLE_Y }}
+            VITE_GO2RTC_STREAM=${{ secrets.VITE_GO2RTC_STREAM }}
+            VITE_GO2RTC_URL=${{ secrets.VITE_GO2RTC_URL }}
             VITE_HA_BASE_URL=${{ secrets.VITE_HA_BASE_URL }}
             VITE_HA_TOKEN=${{ secrets.VITE_HA_TOKEN }}
             VITE_HA_WEBHOOK_OPEN=${{ secrets.VITE_HA_WEBHOOK_OPEN }}
             VITE_HA_WEBHOOK_OPEN_AND_LATCH=${{ secrets.VITE_HA_WEBHOOK_OPEN_AND_LATCH }}
             VITE_HA_WEBHOOK_UNLATCH=${{ secrets.VITE_HA_WEBHOOK_UNLATCH }}
-            VITE_GO2RTC_URL=${{ secrets.VITE_GO2RTC_URL }}
-            VITE_GO2RTC_STREAM=${{ secrets.VITE_GO2RTC_STREAM }}
+            VITE_MOCK=${{ secrets.VITE_MOCK }}
+            VITE_VIDEO_CROP_ORIGIN_X=${{ secrets.VITE_VIDEO_CROP_ORIGIN_X }}
+            VITE_VIDEO_CROP_ORIGIN_Y=${{ secrets.VITE_VIDEO_CROP_ORIGIN_Y }}
+            VITE_VIDEO_CROP_SCALE=${{ secrets.VITE_VIDEO_CROP_SCALE }}
