@@ -48,11 +48,18 @@ describe('GateControls', () => {
   it('keeps Open enabled when latch feature is off even if latched', () => {
     const wrapper = factory({ latched: true, latchEnabled: false })
     const buttons = wrapper.findAll('button')
-    // Open should still be clickable
+    // Only the Open button should be rendered
+    expect(buttons).toHaveLength(1)
     expect(buttons[0].attributes('disabled')).toBeUndefined()
-    // Latch and Unlatch stay disabled
-    expect(buttons[1].attributes('disabled')).toBeDefined()
-    expect(buttons[2].attributes('disabled')).toBeDefined()
+  })
+
+  it('hides Latch and Unlatch buttons when latch feature is off', () => {
+    const wrapper = factory({ latchEnabled: false })
+    const buttons = wrapper.findAll('button')
+    // Only the Open button should be rendered
+    expect(buttons).toHaveLength(1)
+    expect(wrapper.text()).not.toContain('Latch')
+    expect(wrapper.text()).not.toContain('Unlatch')
   })
 
   it('disables all buttons when an action is active', () => {
@@ -77,11 +84,11 @@ describe('GateControls', () => {
     expect(wrapper.emitted('open-and-latch')).toBeTruthy()
   })
 
-  it('disables Latch button when latch feature is off', async () => {
+  it('does not render Latch button when latch feature is off', async () => {
     const wrapper = factory({ latchEnabled: false })
     const buttons = wrapper.findAll('button')
-    expect(buttons[1].attributes('disabled')).toBeDefined()
-    await buttons[1].trigger('click')
+    // Only Open button exists
+    expect(buttons).toHaveLength(1)
     expect(wrapper.emitted('open-and-latch')).toBeFalsy()
   })
 
@@ -92,11 +99,11 @@ describe('GateControls', () => {
     expect(wrapper.emitted('unlatch')).toBeTruthy()
   })
 
-  it('disables Unlatch button when latch feature is off', async () => {
+  it('does not render Unlatch button when latch feature is off', async () => {
     const wrapper = factory({ latched: true, latchEnabled: false })
     const buttons = wrapper.findAll('button')
-    expect(buttons[2].attributes('disabled')).toBeDefined()
-    await buttons[2].trigger('click')
+    // Only Open button exists
+    expect(buttons).toHaveLength(1)
     expect(wrapper.emitted('unlatch')).toBeFalsy()
   })
 
