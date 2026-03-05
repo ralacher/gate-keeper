@@ -62,10 +62,15 @@ jobs:
             VITE_GATE_DETECT_MODE=${{ secrets.VITE_GATE_DETECT_MODE }}
             VITE_GATE_DETECT_SAMPLE_X=${{ secrets.VITE_GATE_DETECT_SAMPLE_X }}
             VITE_GATE_DETECT_SAMPLE_Y=${{ secrets.VITE_GATE_DETECT_SAMPLE_Y }}
+            VITE_GATE_DETECT_SAMPLE_X=${{ secrets.VITE_GATE_DETECT_SAMPLE_X }}
+            VITE_GATE_DETECT_SAMPLE_Y=${{ secrets.VITE_GATE_DETECT_SAMPLE_Y }}
+            VITE_GATE_DETECT_SAMPLE_SIZE=${{ secrets.VITE_GATE_DETECT_SAMPLE_SIZE }}
+            VITE_GATE_DETECT_INTERVAL=${{ secrets.VITE_GATE_DETECT_INTERVAL }}
+            VITE_GATE_DETECT_THRESHOLD=${{ secrets.VITE_GATE_DETECT_THRESHOLD }}
+            VITE_GATE_DETECT_OPEN_ABOVE=${{ secrets.VITE_GATE_DETECT_OPEN_ABOVE }}
             VITE_GO2RTC_STREAM=${{ secrets.VITE_GO2RTC_STREAM }}
             VITE_GO2RTC_URL=${{ secrets.VITE_GO2RTC_URL }}
             VITE_HA_BASE_URL=${{ secrets.VITE_HA_BASE_URL }}
-            VITE_HA_TOKEN=${{ secrets.VITE_HA_TOKEN }}
             VITE_HA_WEBHOOK_OPEN=${{ secrets.VITE_HA_WEBHOOK_OPEN }}
             VITE_HA_WEBHOOK_OPEN_AND_LATCH=${{ secrets.VITE_HA_WEBHOOK_OPEN_AND_LATCH }}
             VITE_HA_WEBHOOK_UNLATCH=${{ secrets.VITE_HA_WEBHOOK_UNLATCH }}
@@ -73,3 +78,9 @@ jobs:
             VITE_VIDEO_CROP_ORIGIN_X=${{ secrets.VITE_VIDEO_CROP_ORIGIN_X }}
             VITE_VIDEO_CROP_ORIGIN_Y=${{ secrets.VITE_VIDEO_CROP_ORIGIN_Y }}
             VITE_VIDEO_CROP_SCALE=${{ secrets.VITE_VIDEO_CROP_SCALE }}
+            VITE_VIDEO_POI_LEFT=${{ secrets.VITE_VIDEO_POI_LEFT }}
+            VITE_VIDEO_POI_TOP=${{ secrets.VITE_VIDEO_POI_TOP }}
+            VITE_VIDEO_POI_WIDTH=${{ secrets.VITE_VIDEO_POI_WIDTH }}
+            VITE_VIDEO_POI_HEIGHT=${{ secrets.VITE_VIDEO_POI_HEIGHT }}
+            VITE_VIDEO_POI_LABEL=${{ secrets.VITE_VIDEO_POI_LABEL }}
+            VITE_VIDEO_POI_COLOR=${{ secrets.VITE_VIDEO_POI_COLOR }}
