@@ -163,7 +163,7 @@ function onScheduleConfirm(unlatchAt) {
         </section>
 
         <!-- Latch status -->
-        <section v-if="manualLatchUiEnabled" class="flex justify-center">
+        <section class="flex justify-center">
           <LatchStatus
             :latched="latched"
             :expected-unlatch="expectedUnlatch"

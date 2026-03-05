@@ -27,7 +27,7 @@ function onUnlatch() {
 </script>
 
 <template>
-  <div :class="['grid gap-3', latchEnabled ? 'grid-cols-3' : 'grid-cols-1']" role="group" aria-label="Gate controls">
+  <div class="grid gap-3 grid-cols-3" role="group" aria-label="Gate controls">
     <!-- Open -->
     <button
       class="group relative flex h-[4.5rem] flex-col items-center justify-center gap-1.5 rounded-xl border border-primary/20 bg-primary/[0.08] text-primary transition-all duration-200 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-30 glow-primary"
@@ -46,9 +46,8 @@ function onUnlatch() {
 
     <!-- Open & Latch -->
     <button
-      v-if="latchEnabled"
       class="group relative flex h-[4.5rem] flex-col items-center justify-center gap-1.5 rounded-xl border border-warning/20 bg-warning/[0.08] text-warning transition-all duration-200 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-30 glow-warning"
-      :disabled="activeAction || latched"
+      :disabled="!latchEnabled || activeAction || latched"
       :aria-label="activeAction === 'open-and-latch' ? (countdown > 0 ? 'Gate is latched open' : 'Opening and latching gate…') : 'Open and latch gate'"
       :aria-busy="activeAction === 'open-and-latch'"
       @click="onOpenAndLatch"
@@ -63,9 +62,8 @@ function onUnlatch() {
 
     <!-- Unlatch -->
     <button
-      v-if="latchEnabled"
       class="group relative flex h-[4.5rem] flex-col items-center justify-center gap-1.5 rounded-xl border border-accent/20 bg-accent/[0.08] text-accent transition-all duration-200 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-30 glow-accent"
-      :disabled="activeAction || !latched"
+      :disabled="!latchEnabled || activeAction || !latched"
       :aria-label="activeAction === 'unlatch' ? 'Unlatching gate…' : 'Unlatch gate'"
       :aria-busy="activeAction === 'unlatch'"
       @click="onUnlatch"
@@ -74,7 +72,7 @@ function onUnlatch() {
       <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
         <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/>
       </svg>
-      <span class="text-xs font-semibold" aria-hidden="true">{{ !latchEnabled ? 'Disabled' : activeAction === 'unlatch' ? 'Unlatching…' : 'Unlatch' }}</span>
+      <span class="text-xs font-semibold" aria-hidden="true">{{ activeAction === 'unlatch' ? 'Unlatching…' : 'Unlatch' }}</span>
     </button>
   </div>
 </template>

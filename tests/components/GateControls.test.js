@@ -48,18 +48,24 @@ describe('GateControls', () => {
   it('keeps Open enabled when latch feature is off even if latched', () => {
     const wrapper = factory({ latched: true, latchEnabled: false })
     const buttons = wrapper.findAll('button')
-    // Only the Open button should be rendered
-    expect(buttons).toHaveLength(1)
+    // All three buttons should be rendered
+    expect(buttons).toHaveLength(3)
+    // Open is enabled (latch state doesn't disable it when feature is off)
     expect(buttons[0].attributes('disabled')).toBeUndefined()
+    // Latch and Unlatch are disabled
+    expect(buttons[1].attributes('disabled')).toBeDefined()
+    expect(buttons[2].attributes('disabled')).toBeDefined()
   })
 
-  it('hides Latch and Unlatch buttons when latch feature is off', () => {
+  it('disables Latch and Unlatch buttons when latch feature is off', () => {
     const wrapper = factory({ latchEnabled: false })
     const buttons = wrapper.findAll('button')
-    // Only the Open button should be rendered
-    expect(buttons).toHaveLength(1)
-    expect(wrapper.text()).not.toContain('Latch')
-    expect(wrapper.text()).not.toContain('Unlatch')
+    // All three buttons should be rendered but Latch and Unlatch are disabled
+    expect(buttons).toHaveLength(3)
+    expect(buttons[1].attributes('disabled')).toBeDefined()
+    expect(buttons[2].attributes('disabled')).toBeDefined()
+    expect(wrapper.text()).toContain('Latch')
+    expect(wrapper.text()).toContain('Unlatch')
   })
 
   it('disables all buttons when an action is active', () => {
@@ -84,11 +90,12 @@ describe('GateControls', () => {
     expect(wrapper.emitted('open-and-latch')).toBeTruthy()
   })
 
-  it('does not render Latch button when latch feature is off', async () => {
+  it('shows Latch button as disabled when latch feature is off', async () => {
     const wrapper = factory({ latchEnabled: false })
     const buttons = wrapper.findAll('button')
-    // Only Open button exists
-    expect(buttons).toHaveLength(1)
+    // All three buttons rendered; Latch button is disabled
+    expect(buttons).toHaveLength(3)
+    expect(buttons[1].attributes('disabled')).toBeDefined()
     expect(wrapper.emitted('open-and-latch')).toBeFalsy()
   })
 
@@ -99,11 +106,12 @@ describe('GateControls', () => {
     expect(wrapper.emitted('unlatch')).toBeTruthy()
   })
 
-  it('does not render Unlatch button when latch feature is off', async () => {
+  it('shows Unlatch button as disabled when latch feature is off', async () => {
     const wrapper = factory({ latched: true, latchEnabled: false })
     const buttons = wrapper.findAll('button')
-    // Only Open button exists
-    expect(buttons).toHaveLength(1)
+    // All three buttons rendered; Unlatch button is disabled
+    expect(buttons).toHaveLength(3)
+    expect(buttons[2].attributes('disabled')).toBeDefined()
     expect(wrapper.emitted('unlatch')).toBeFalsy()
   })
 
