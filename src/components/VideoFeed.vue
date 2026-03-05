@@ -134,12 +134,53 @@ const sampleOverlayStyle = computed(() => {
 
 // Delay before auto-reconnect after a dropped connection (ms)
 const RECONNECT_DELAY_MS = 3000
+// Maximum consecutive WebRTC failures before falling back to HTTP stream
+const MAX_WEBRTC_RETRIES = 2
+// ICE gathering timeout (cellular networks need more time)
+const ICE_GATHER_TIMEOUT_MS = 10000
 
-const status = ref('idle') // idle | connecting | connected | error
+const status = ref('idle') // idle | connecting | connected | error | stream
+const streamMode = ref('webrtc') // webrtc | http
 const errorMsg = ref('')
 
 let pc = null
 let reconnectTimer = null
+let webrtcFailCount = 0
+
+/**
+ * Fetch ephemeral Cloudflare TURN credentials from the push-server sidecar.
+ * Returns an array of RTCIceServer objects, or an empty array on failure.
+ */
+async function fetchTurnServers() {
+  try {
+    const res = await fetch('/push/turn/credentials')
+    if (!res.ok) return []
+    const data = await res.json()
+    // Cloudflare returns { iceServers: { urls, username, credential } }
+    if (data?.iceServers) {
+      return [data.iceServers]
+    }
+    return []
+  } catch {
+    console.warn('Could not fetch TURN credentials — WebRTC will use STUN only')
+    return []
+  }
+}
+
+/** Switch to HTTP-based MP4 stream (works through nginx, no NAT traversal). */
+function connectHttpStream() {
+  streamMode.value = 'http'
+  status.value = 'connecting'
+  errorMsg.value = ''
+
+  const streamUrl = `${go2rtcBase}/api/stream.mp4?src=${encodeURIComponent(go2rtcStream)}`
+  if (videoEl.value) {
+    videoEl.value.srcObject = null
+    videoEl.value.src = streamUrl
+    videoEl.value.play().catch(() => { /* autoplay may be blocked, user tap will start */ })
+  }
+  // The 'loadeddata' / 'error' events on the <video> element handle status updates
+}
 
 async function connect() {
   if (isMock || !go2rtcUrl || !go2rtcStream) {
@@ -147,13 +188,26 @@ async function connect() {
     return
   }
 
+  // If we've exhausted WebRTC retries, fall back to HTTP streaming
+  if (webrtcFailCount >= MAX_WEBRTC_RETRIES) {
+    console.warn(`WebRTC failed ${webrtcFailCount} times — falling back to HTTP stream`)
+    connectHttpStream()
+    return
+  }
+
+  streamMode.value = 'webrtc'
   status.value = 'connecting'
   errorMsg.value = ''
 
   try {
-    pc = new RTCPeerConnection({
-      iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
-    })
+    // Fetch fresh TURN credentials (ephemeral, from Cloudflare via push-server)
+    const turnServers = await fetchTurnServers()
+    const iceServers = [
+      { urls: 'stun:stun.cloudflare.com:3478' },
+      ...turnServers,
+    ]
+
+    pc = new RTCPeerConnection({ iceServers })
 
     pc.ontrack = (event) => {
       if (videoEl.value) {
@@ -178,7 +232,8 @@ async function connect() {
     const offer = await pc.createOffer()
     await pc.setLocalDescription(offer)
 
-    // Wait for ICE gathering to complete (or timeout)
+    // Wait for ICE gathering to complete (or timeout).
+    // Cellular networks often need more time for TURN allocation.
     await new Promise((resolve) => {
       if (pc.iceGatheringState === 'complete') {
         resolve()
@@ -190,8 +245,8 @@ async function connect() {
           }
         }
         pc.addEventListener('icegatheringstatechange', check)
-        // Timeout fallback
-        setTimeout(resolve, 3000)
+        // Timeout fallback — longer for cellular/TURN
+        setTimeout(resolve, ICE_GATHER_TIMEOUT_MS)
       }
     })
 
@@ -214,8 +269,14 @@ async function connect() {
     }))
   } catch (err) {
     console.error('WebRTC connection failed:', err)
+    webrtcFailCount++
     status.value = 'error'
     errorMsg.value = err.message || 'Failed to connect to video stream'
+
+    // Auto-fallback: if we've hit the retry limit, switch to HTTP stream
+    if (webrtcFailCount >= MAX_WEBRTC_RETRIES) {
+      scheduleReconnect()
+    }
   }
 }
 
@@ -243,8 +304,31 @@ function disconnect() {
   }
   if (videoEl.value) {
     videoEl.value.srcObject = null
+    videoEl.value.removeAttribute('src')
+    videoEl.value.load() // reset the element fully
   }
   status.value = 'idle'
+}
+
+/** Reset WebRTC failure counter and reconnect via WebRTC. */
+function retryWebRTC() {
+  disconnect()
+  webrtcFailCount = 0
+  streamMode.value = 'webrtc'
+  connect()
+}
+
+/** Handle <video> events for HTTP stream mode. */
+function onVideoLoadedData() {
+  if (streamMode.value === 'http') {
+    status.value = 'connected'
+  }
+}
+function onVideoError() {
+  if (streamMode.value === 'http') {
+    status.value = 'error'
+    errorMsg.value = 'HTTP stream failed'
+  }
 }
 
 onMounted(() => {
@@ -293,13 +377,23 @@ onBeforeUnmount(() => {
         <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
       </svg>
       <p class="text-sm text-error/70">{{ errorMsg }}</p>
-      <button
-        class="rounded-lg border border-primary/20 bg-primary/10 px-4 py-1.5 text-xs font-medium text-primary transition-all hover:bg-primary/20"
-        aria-label="Retry video connection"
-        @click="connect"
-      >
-        Retry
-      </button>
+      <div class="flex gap-2">
+        <button
+          class="rounded-lg border border-primary/20 bg-primary/10 px-4 py-1.5 text-xs font-medium text-primary transition-all hover:bg-primary/20"
+          aria-label="Retry video connection"
+          @click="retryWebRTC"
+        >
+          Retry
+        </button>
+        <button
+          v-if="streamMode === 'webrtc'"
+          class="rounded-lg border border-warning/20 bg-warning/10 px-4 py-1.5 text-xs font-medium text-warning transition-all hover:bg-warning/20"
+          aria-label="Switch to HTTP stream"
+          @click="connectHttpStream"
+        >
+          HTTP Stream
+        </button>
+      </div>
     </div>
 
     <!-- Video player (optionally CSS-cropped via VITE_VIDEO_CROP_* env vars) -->
@@ -315,7 +409,19 @@ onBeforeUnmount(() => {
         playsinline
         muted
         aria-label="Gate camera feed"
+        @loadeddata="onVideoLoadedData"
+        @error="onVideoError"
       />
+
+      <!-- HTTP-stream mode badge (top-right) -->
+      <div
+        v-if="streamMode === 'http' && status === 'connected'"
+        class="pointer-events-none absolute top-2 right-2 rounded-full bg-warning/80 px-2 py-0.5 text-[10px] font-semibold text-warning-content drop-shadow-md"
+        role="status"
+        aria-label="Video streaming via HTTP fallback"
+      >
+        HTTP stream
+      </div>
 
       <!-- Point-of-interest rectangle overlay -->
       <div

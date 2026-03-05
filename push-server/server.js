@@ -122,6 +122,48 @@ app.post('/push/send', async (req, res) => {
   res.json({ sent, total: targets.length })
 })
 
+// ── Cloudflare TURN credentials ──────────────────────────────
+const CF_TURN_TOKEN_ID = process.env.CF_TURN_TOKEN_ID || ''
+const CF_TURN_API_TOKEN = process.env.CF_TURN_API_TOKEN || ''
+const CF_TURN_TTL = parseInt(process.env.CF_TURN_TTL, 10) || 86400 // 24 h
+
+/**
+ * Generate ephemeral Cloudflare TURN credentials.
+ * Docs: https://developers.cloudflare.com/realtime/turn/
+ */
+app.get('/push/turn/credentials', async (_req, res) => {
+  if (!CF_TURN_TOKEN_ID || !CF_TURN_API_TOKEN) {
+    return res.status(501).json({ error: 'Cloudflare TURN not configured' })
+  }
+
+  try {
+    const cfRes = await fetch(
+      `https://rtc.live.cloudflare.com/v1/turn/keys/${CF_TURN_TOKEN_ID}/credentials/generate`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${CF_TURN_API_TOKEN}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ttl: CF_TURN_TTL }),
+      },
+    )
+
+    if (!cfRes.ok) {
+      const text = await cfRes.text()
+      console.error(`[turn] Cloudflare API error ${cfRes.status}: ${text}`)
+      return res.status(502).json({ error: 'Cloudflare TURN API error' })
+    }
+
+    const data = await cfRes.json()
+    // Cloudflare returns { iceServers: { urls, username, credential } }
+    res.json(data)
+  } catch (err) {
+    console.error('[turn] Failed to fetch credentials:', err.message)
+    res.status(500).json({ error: 'Failed to generate TURN credentials' })
+  }
+})
+
 /** Health check */
 app.get('/push/health', (_req, res) => {
   res.json({ ok: true, subscriptions: subscriptions.length })

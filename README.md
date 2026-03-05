@@ -30,6 +30,8 @@ The signed-in user's e-mail address is captured from Cloudflare headers (`CF-Acc
 
 An embedded WebRTC video stream from go2rtc (built into Home Assistant). Shows a live view of the gate camera with low latency. Falls back to a placeholder when not configured.
 
+When WebRTC cannot connect (e.g. on cellular networks behind carrier-grade NAT), the player automatically retries twice and then falls back to an HTTP MP4 stream served through the nginx reverse proxy. A manual **HTTP Stream** button is also available in the error state.
+
 ### Gate Position Detection (Experimental)
 
 An optional feature that infers whether the gate is **open** or **closed** by periodically sampling a small region of the camera feed and measuring its average brightness.
@@ -128,11 +130,64 @@ All connection parameters are provided via environment variables — nothing is 
 | `VAPID_PUBLIC_KEY` | VAPID public key for Web Push | `BEl6...` |
 | `VAPID_PRIVATE_KEY` | VAPID private key for Web Push | `abc...` |
 | `VAPID_SUBJECT` | Contact URI for push server | `mailto:gate@example.com` |
+| `CF_TURN_TOKEN_ID` | Cloudflare TURN token ID (for cellular WebRTC) | `abc123...` |
+| `CF_TURN_API_TOKEN` | Cloudflare API token with _Turn Token Edit_ permission | `v1.0-...` |
+| `CF_TURN_TTL` | Ephemeral credential lifetime in seconds (default `86400`) | `86400` |
 
 > **Security note:** `HA_TOKEN` is intentionally not prefixed with `VITE_`. The Vite build
 > toolchain only embeds `VITE_*` variables in the browser bundle. `HA_TOKEN` is injected
 > solely by the nginx reverse proxy (or the Vite dev proxy in Node.js), so it is never
 > visible to any browser.
+
+## Cellular / Remote Access (Cloudflare TURN)
+
+On a local network (WiFi), WebRTC connects directly to go2rtc via STUN.
+On cellular, the phone is typically behind **carrier-grade symmetric NAT** where STUN alone cannot establish a peer connection. A TURN relay is required.
+
+This project uses [Cloudflare TURN](https://developers.cloudflare.com/realtime/turn/) to relay WebRTC traffic when direct connectivity fails.
+
+### How it works
+
+1. The **push-server** sidecar exposes `GET /push/turn/credentials`.
+2. Before each WebRTC connection, `VideoFeed.vue` fetches fresh ephemeral TURN credentials from that endpoint.
+3. Cloudflare's API returns short-lived `{ iceServers: { urls, username, credential } }` objects.
+4. The `RTCPeerConnection` is created with both Cloudflare STUN (`stun:stun.cloudflare.com:3478`) and the fetched TURN servers.
+5. If WebRTC still fails after 2 attempts, the player automatically falls back to an HTTP MP4 stream via `/go2rtc/api/stream.mp4`.
+
+### go2rtc configuration
+
+go2rtc must advertise a public WebRTC candidate so callers can reach it through your Cloudflare tunnel or port-forward:
+
+```yaml
+webrtc:
+  candidates:
+    - gate.lacher.io:8555
+```
+
+No TURN configuration is needed on the go2rtc side — only the browser client uses TURN.
+
+### Cloudflare setup
+
+1. Go to the Cloudflare dashboard → **Real-Time** → **TURN**.
+2. Create a **TURN Token** and note the **Token ID**.
+3. Generate an **API Token** with the `Turn Token Edit` permission scoped to your account.
+4. Add to your deployment environment:
+
+```env
+CF_TURN_TOKEN_ID=<token-id>
+CF_TURN_API_TOKEN=<api-token>
+```
+
+Credentials are generated on-demand with a 24-hour TTL (configurable via `CF_TURN_TTL`). No static TURN passwords to rotate.
+
+### Fallback behavior
+
+| Attempt | Strategy |
+|---|---|
+| 1–2 | WebRTC with STUN + Cloudflare TURN |
+| 3+ | Automatic HTTP MP4 stream (higher latency, but works everywhere) |
+| Manual | "HTTP Stream" button in the error state |
+| Manual | "Retry" button resets the counter and tries WebRTC again |
 
 ## Tech Stack
 

@@ -12,6 +12,8 @@ services:
       - VAPID_PUBLIC_KEY=${VAPID_PUBLIC_KEY}
       - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY}
       - VAPID_SUBJECT=${VAPID_SUBJECT}
+      - CF_TURN_TOKEN_ID=${CF_TURN_TOKEN_ID}
+      - CF_TURN_API_TOKEN=${CF_TURN_API_TOKEN}
     volumes:
       - push-data:/data
 
